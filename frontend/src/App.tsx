@@ -7,6 +7,7 @@ import NuevaInscripcionPage from './pages/tutor/NuevaInscripcionPage'
 import MisInscripcionesPage from './pages/tutor/MisInscripcionesPage'
 import TurnosPage from './pages/tutor/TurnosPage'
 import GestionInscripcionesPage from './pages/administrativo/GestionInscripcionPage'
+import AdministracionSistemaPage from './pages/sistemas/AdministradorSistemaPage'
 
 function App() {
   return (
@@ -36,6 +37,11 @@ function App() {
         <Route
           path="/tutor/turnos"
           element={<TurnosPage />}
+        />
+
+        <Route
+          path="/sistemas"
+          element={<AdministracionSistemaPage />}
         />
 
         <Route

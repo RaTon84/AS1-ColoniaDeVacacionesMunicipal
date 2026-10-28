@@ -2,9 +2,6 @@ import { NavLink } from 'react-router-dom'
 import {
   House,
   ClipboardList,
-  Users,
-  CalendarDays,
-  Clock,
   FileText,
   Settings,
   Waves,
@@ -18,15 +15,31 @@ interface SidebarProps {
 
 function Sidebar({ onNavigate }: SidebarProps) {
   const opciones = [
-    { nombre: 'Inicio', ruta: '/', icono: House },
-    { nombre: 'Nueva Inscripción', ruta: '/inscripciones/nueva', icono: ClipboardList },
-    {nombre: 'Gestión de inscripciones', ruta: '/administrativo/inscripciones',icono: ClipboardList,},
-    { nombre: 'Mis inscripciones', ruta: '/tutor/mis-inscripciones', icono: FileText },
-    { nombre: 'Participantes', ruta: '/participantes', icono: Users },
-    { nombre: 'Actividades', ruta: '/actividades', icono: CalendarDays },
-    { nombre: 'Turnos', ruta: '/tutor/turnos', icono: Clock },
-    { nombre: 'Reportes', ruta: '/reportes', icono: FileText },
-    { nombre: 'Configuración', ruta: '/configuracion', icono: Settings },
+    {
+      nombre: 'Inicio',
+      ruta: '/',
+      icono: House,
+    },
+    {
+      nombre: 'Nueva inscripción',
+      ruta: '/inscripciones/nueva',
+      icono: ClipboardList,
+    },
+    {
+      nombre: 'Gestión de inscripciones',
+      ruta: '/administrativo/inscripciones',
+      icono: ClipboardList,
+    },
+    {
+      nombre: 'Mis inscripciones',
+      ruta: '/tutor/mis-inscripciones',
+      icono: FileText,
+    },
+    {
+      nombre: 'Administración del sistema',
+      ruta: '/sistemas',
+      icono: Settings,
+    },
   ]
 
   return (
@@ -103,4 +116,3 @@ function Sidebar({ onNavigate }: SidebarProps) {
 }
 
 export default Sidebar
-

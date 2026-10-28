@@ -1,3 +1,4 @@
+
 # Levanta todo el sistema con un solo comando:  docker compose up --build
 # Cada variable tiene un valor por defecto, así que no hace falta crear un .env.
 # Para cambiar algún valor, copiar .env.example como .env y editarlo.
@@ -27,6 +28,7 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin_demo_cambiar}
     volumes:
       - ./keycloak/realm-colonia.json:/opt/keycloak/data/import/realm-colonia.json:ro
+      - ./keycloak/themes/colonia:/opt/keycloak/themes/colonia:ro
     ports:
       - "8080:8080"
 
@@ -43,3 +45,4 @@ services:
 
 volumes:
   postgres_data:
+

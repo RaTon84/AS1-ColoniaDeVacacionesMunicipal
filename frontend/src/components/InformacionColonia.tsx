@@ -56,8 +56,8 @@ function InformacionColonia() {
       className="grid grid-cols-1 gap-4 xl:grid-cols-5"
       aria-label="Información general de la colonia"
     >
-      <article className="rounded-2xl bg-white p-6 shadow-sm xl:col-span-3">
-        <h2 className="mb-5 text-2xl font-bold text-[#142D50]">
+      <article className="rounded-2xl bg-white p-6 shadow-sm xl:col-span-2">
+        <h2 className="mb-3 text-xl font-bold text-[#142D50]">
           Información de la colonia
         </h2>
 
@@ -121,7 +121,7 @@ function InformacionColonia() {
       </article>
 
       <article className="rounded-2xl bg-white p-6 shadow-sm xl:col-span-3">
-        <h2 className="mb-5 text-2xl font-bold text-[#142D50]">Actividades</h2>
+        <h2 className="mb-3 text-xl font-bold text-[#142D50]">Actividades</h2>
 
         <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
           {actividades.map((actividad) => {
@@ -156,7 +156,7 @@ function InformacionColonia() {
         </div>
       </article>
 
-      <article className="relative min-h-[220px] overflow-hidden rounded-2xl bg-[#FFF3D8] p-7 shadow-sm xl:col-span-2">
+      <article className="relative min-h-[180px] overflow-hidden rounded-2xl bg-[#FFF3D8] p-5 shadow-sm xl:col-span-2">
         <Sun
           size={80}
           strokeWidth={1.5}

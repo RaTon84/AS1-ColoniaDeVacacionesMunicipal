@@ -1,8 +1,7 @@
-
 function BannerBienvenida() {
   return (
     <section
-      className="relative flex h-[220px] items-center overflow-hidden bg-white bg-no-repeat lg:h-[250px]"
+      className="relative flex h-[200px] items-center overflow-hidden bg-white bg-no-repeat lg:h-[190px]"
       style={{
         backgroundImage: "url('/images/banner-colonia.png')",
         backgroundSize: 'cover',
@@ -28,3 +27,4 @@ function BannerBienvenida() {
 }
 
 export default BannerBienvenida
+

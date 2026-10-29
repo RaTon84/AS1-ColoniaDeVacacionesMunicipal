@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+
 import {
   House,
   ClipboardList,
@@ -7,13 +9,18 @@ import {
   Waves,
   Sun,
   X,
+  LogOut,
 } from 'lucide-react'
+
+import keycloak from '../auth/keycloak'
 
 interface SidebarProps {
   onNavigate?: () => void
 }
 
 function Sidebar({ onNavigate }: SidebarProps) {
+  const [cerrandoSesion, setCerrandoSesion] = useState(false)
+
   const opciones = [
     {
       nombre: 'Inicio',
@@ -42,6 +49,21 @@ function Sidebar({ onNavigate }: SidebarProps) {
     },
   ]
 
+  async function cerrarSesion() {
+    if (cerrandoSesion) return
+
+    setCerrandoSesion(true)
+
+    try {
+      await keycloak.logout({
+        redirectUri: `${window.location.origin}/`,
+      })
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error)
+      setCerrandoSesion(false)
+    }
+  }
+
   return (
     <aside className="flex h-full min-h-dvh w-60 flex-col bg-[#172E4D] text-white">
 
@@ -55,6 +77,7 @@ function Sidebar({ onNavigate }: SidebarProps) {
           <X size={24} />
         </button>
       </div>
+
 
       <div className="px-6 pb-8 pt-8 text-center">
         <div className="mb-3 flex flex-col items-center">
@@ -101,18 +124,25 @@ function Sidebar({ onNavigate }: SidebarProps) {
         })}
       </nav>
 
-      <div className="px-6 py-8 text-center text-slate-300">
-        <p className="text-sm font-medium">
-          Municipalidad
-        </p>
+      <div className="px-3 pt-5">
+        <div className="mb-3 border-t border-white/15" />
 
-        <p className="text-xs">
-          Deportes y Recreación
-        </p>
+        <button
+          type="button"
+          onClick={cerrarSesion}
+          disabled={cerrandoSesion}
+          className="flex w-full items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium text-slate-200 transition-colors hover:bg-[#243F60] hover:text-white disabled:cursor-wait disabled:opacity-60"
+        >
+          <LogOut size={22} aria-hidden="true" />
+
+          <span>
+            {cerrandoSesion ? 'Cerrando sesión...' : 'Cerrar sesión'}
+          </span>
+        </button>
       </div>
-
     </aside>
   )
 }
 
 export default Sidebar
+

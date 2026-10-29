@@ -1,16 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import Keycloak from 'keycloak-js'
 
 import './index.css'
 import App from './App.tsx'
-
-const keycloak = new Keycloak({
-  url: 'http://localhost:8080',
-  realm: 'colonia',
-  clientId: 'colonia-spa',
-})
+import keycloak from './auth/keycloak'
 
 async function iniciarAplicacion() {
   const rootElement = document.getElementById('root')

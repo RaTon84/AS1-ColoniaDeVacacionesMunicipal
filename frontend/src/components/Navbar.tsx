@@ -5,6 +5,7 @@ import {
   House,
   ClipboardList,
   FileText,
+  Files,
   Settings,
   Waves,
   Sun,
@@ -45,6 +46,12 @@ function Navbar() {
       nombre: 'Gestión de inscripciones',
       ruta: '/administrativo/inscripciones',
       icono: ClipboardList,
+      roles: ['administrativo'],
+    },
+    {
+      nombre: 'Inscripciones registradas',
+      ruta: '/administrativo/registradas',
+      icono: Files,
       roles: ['administrativo'],
     },
     {

@@ -1,0 +1,329 @@
+/* ==========================================
+   COLONIA DE VACACIONES
+   LOGIN PERSONALIZADO - KEYCLOAK
+   ========================================== */
+
+:root {
+  --azul-oscuro: #172e4d;
+  --azul-principal: #0868c1;
+  --azul-hover: #07539a;
+}
+
+/* ==========================================
+   PANTALLA COMPLETA
+   ========================================== */
+
+@media (min-width: 701px) {
+
+  html,
+  body,
+  body.login-pf {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #dff4ff !important;
+  }
+
+  .login-pf-page {
+    display: grid;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: none !important;
+
+    margin: 0 !important;
+    padding: 0 7% !important;
+
+    box-sizing: border-box;
+    overflow: hidden;
+
+    border-radius: 0;
+    box-shadow: none;
+
+    background-image: url("../img/fondo-login.png") !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(380px, 440px);
+
+    grid-template-rows:
+      minmax(0, 1fr)
+      auto
+      auto
+      minmax(0, 1fr);
+  }
+
+  /* Formulario a la derecha, sin salir de la pantalla */
+
+  .login-pf-page .card-pf {
+    grid-column: 2;
+    grid-row: 3;
+
+    transform: translateX(-100px);
+  }
+}
+
+/* ==========================================
+   OCULTAR EL ENCABEZADO ORIGINAL
+   ========================================== */
+
+#kc-header {
+  display: none !important;
+}
+
+/* ==========================================
+   TARJETA BLANCA
+   ========================================== */
+
+.login-pf-page .card-pf {
+  width: 420px;
+  max-width: 100%;
+
+  margin: 0;
+  padding: 32px 32px 36px;
+
+  box-sizing: border-box;
+
+  background: #ffffff !important;
+
+  border: none !important;
+  border-radius: 24px !important;
+
+  box-shadow: 0 16px 45px rgba(23, 46, 77, 0.20) !important;
+}
+
+/* ==========================================
+   CONTENIDO DEL FORMULARIO
+   ========================================== */
+
+#kc-content,
+#kc-content-wrapper,
+#kc-form {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+/* ==========================================
+   LOGO Y NOMBRE DE LA COLONIA
+   ========================================== */
+
+#kc-page-title::before {
+  content: "COLONIA DE VACACIONES";
+
+  display: block;
+
+  /* Reserva espacio para el logo */
+  padding-top: 93px;
+  margin-bottom: 24px;
+
+  background-image: url("../img/logo-colonia.svg");
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: 85px 85px;
+
+  color: #0868b2;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+
+  text-align: center;
+  letter-spacing: 0.4px;
+}
+
+/* ==========================================
+   TÍTULO INICIAR SESIÓN
+   ========================================== */
+
+#kc-page-title {
+  margin: 0 0 27px;
+  padding: 0;
+
+  color: var(--azul-oscuro);
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+
+  text-align: center;
+}
+
+/* ==========================================
+   ETIQUETAS
+   ========================================== */
+
+#kc-form-login .form-group {
+  margin-bottom: 20px;
+}
+
+#kc-form-login label {
+  display: block;
+  margin-bottom: 8px;
+
+  color: var(--azul-oscuro);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ==========================================
+   CAMPOS DE USUARIO Y CONTRASEÑA
+   ========================================== */
+
+#kc-form-login input[type="text"],
+#kc-form-login input[type="email"],
+#kc-form-login input[type="password"] {
+  width: 100%;
+  min-height: 48px;
+
+  box-sizing: border-box;
+  padding: 10px 13px;
+
+  background: #ffffff;
+  color: var(--azul-oscuro);
+
+  border: 1px solid #cbd8e7;
+  border-radius: 10px;
+
+  font-size: 15px;
+  box-shadow: none;
+}
+
+#kc-form-login input:focus {
+  outline: none;
+  border-color: var(--azul-principal);
+
+  box-shadow: 0 0 0 3px rgba(8, 104, 193, 0.12);
+}
+
+/* ==========================================
+   MOSTRAR CONTRASEÑA
+   ========================================== */
+
+#kc-form-login .input-group {
+  display: flex;
+  width: 100%;
+}
+
+#kc-form-login .input-group input {
+  flex: 1;
+  min-width: 0;
+
+  border-radius: 10px 0 0 10px;
+}
+
+#kc-form-login .input-group button {
+  min-height: 48px;
+  padding: 0 13px;
+
+  background: #ffffff;
+  color: var(--azul-oscuro);
+
+  border: 1px solid #cbd8e7;
+  border-radius: 0 10px 10px 0;
+
+  cursor: pointer;
+}
+
+/* ==========================================
+   BOTÓN DE INGRESO
+   ========================================== */
+
+#kc-login {
+  width: 100%;
+  min-height: 49px;
+  margin-top: 10px;
+
+  background: var(--azul-principal);
+  color: #ffffff;
+
+  border: none;
+  border-radius: 10px;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+#kc-login:hover {
+  background: var(--azul-hover);
+}
+
+/* ==========================================
+   ENLACES Y ERRORES
+   ========================================== */
+
+#kc-content a {
+  color: var(--azul-principal);
+  text-decoration: none;
+}
+
+#kc-content a:hover {
+  text-decoration: underline;
+}
+
+#kc-content .alert {
+  padding: 12px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+}
+
+/* ==========================================
+   CELULARES
+   ========================================== */
+
+@media (max-width: 700px) {
+
+  body.login-pf {
+    min-height: 100dvh;
+
+    background-image: url("../img/fondo-login.png") !important;
+    background-position: 32% center !important;
+    background-size: cover !important;
+  }
+
+  .login-pf-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 100dvh;
+    padding: 24px 16px;
+
+    box-sizing: border-box;
+    background: transparent !important;
+  }
+
+  .login-pf-page .card-pf {
+    width: 100%;
+    max-width: 420px;
+
+    margin: 0;
+    padding: 28px 24px 32px;
+
+    transform: none;
+  }
+
+  #kc-page-title {
+    font-size: 24px;
+  }
+
+  #kc-page-title::before {
+    background-size: 65px 65px;
+    padding-top: 73px;
+  }
+}

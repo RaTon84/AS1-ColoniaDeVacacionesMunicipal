@@ -79,3 +79,28 @@ export async function obtenerInscripcionesRegistradas(
 
   return await respuesta.json()
 }
+
+export async function cancelarInscripcion(
+  id: number,
+  token: string
+): Promise<ResultadoInscripcion> {
+  const respuesta = await fetch(
+    `/api/v1/inscripciones/${id}/cancelar`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  )
+
+  if (!respuesta.ok) {
+    const problema = await respuesta.json().catch(() => null)
+
+    throw new Error(
+      problema?.detail || 'No se pudo cancelar la inscripción'
+    )
+  }
+
+  return await respuesta.json()
+}

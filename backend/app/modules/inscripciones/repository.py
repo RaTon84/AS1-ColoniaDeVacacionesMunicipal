@@ -13,4 +13,19 @@ class InscripcionRepository:
         return list(db.scalars(select(Inscripcion).where(Inscripcion.temporada==temporada).order_by(Inscripcion.creado_en,Inscripcion.id)))
     def list_by_user(self,db:Session,subject:str,temporada:int)->list[Inscripcion]:
         return list(db.scalars(select(Inscripcion).where(Inscripcion.creado_por==subject,Inscripcion.temporada==temporada).order_by(Inscripcion.creado_en.desc())))
-    
+    def list_waitlist_for_update(self, db: Session, turno_id: int, temporada: int,) -> list[Inscripcion]:
+        consulta = (select(Inscripcion)
+            .where(
+                Inscripcion.turno_id == turno_id,
+                Inscripcion.temporada == temporada,
+                Inscripcion.estado == "LISTA_ESPERA",
+            )
+            .order_by(
+                Inscripcion.posicion_espera,
+                Inscripcion.creado_en,
+                Inscripcion.id,
+            )
+            .with_for_update()
+        )
+
+        return list(db.scalars(consulta))

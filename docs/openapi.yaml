@@ -163,6 +163,41 @@ paths:
         '503':
           $ref: '#/components/responses/ServicioNoDisponible'
 
+  /api/v1/inscripciones/{id}/cancelar:
+    post:
+      tags: [Inscripciones]
+      summary: Cancelar una inscripción
+      description: |
+        Cancela una inscripción de la temporada actual.
+        El tutor solo puede cancelar las que creó.
+        El administrativo y el administrador de sistemas pueden cancelar cualquiera.
+        Si estaba confirmada, promueve al primero en espera del mismo turno.
+        Repetir la cancelación no vuelve a liberar un cupo.
+      operationId: cancelarInscripcion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Inscripción cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inscripcion'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+  
   /api/v1/inscripciones/{id}:
     parameters:
       - name: id

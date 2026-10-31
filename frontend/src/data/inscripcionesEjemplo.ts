@@ -1,5 +1,5 @@
 
-export type EstadoInscripcion = 'Confirmada' | 'En revisión' | 'Lista de espera'
+export type EstadoInscripcion = 'Confirmada' | 'En revisión' | 'Lista de espera' | 'Cancelada'
 
 export interface Inscripcion {
   id: number

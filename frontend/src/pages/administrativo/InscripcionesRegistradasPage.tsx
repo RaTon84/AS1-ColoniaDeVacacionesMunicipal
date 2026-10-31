@@ -1,14 +1,13 @@
-
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, UsersRound, Plus, Info } from 'lucide-react'
 
 import InscripcionesCard from '../../components/InscripcionesCard'
 
-import {
-  inscripcionesEjemplo,
-  type Inscripcion,
-} from '../../data/inscripcionesEjemplo'
+import type { Inscripcion } from '../../data/inscripcionesEjemplo'
+import keycloak from '../../auth/keycloak'
+import { obtenerInscripcionesRegistradas } from '../../services/inscripciones'
+import { obtenerTurnos } from '../../services/turnos'
 
 type FiltroEstado = 'Todas' | Inscripcion['estado']
 
@@ -17,7 +16,73 @@ function InscripcionesRegistradasPage() {
   const [filtroEstado, setFiltroEstado] =
     useState<FiltroEstado>('Todas')
 
-  const inscripciones = inscripcionesEjemplo
+  const [inscripciones, setInscripciones] = useState<Inscripcion[]>([])
+  const [cargando, setCargando] = useState(true)
+  const [errorCarga, setErrorCarga] = useState('')
+
+    useEffect(() => {
+    let activo = true
+
+    async function cargarInscripciones() {
+      try {
+        await keycloak.updateToken(30)
+
+        const token = keycloak.token
+
+        if (!token) {
+          throw new Error('No hay una sesión activa.')
+        }
+
+        const [registros, turnos] = await Promise.all([
+          obtenerInscripcionesRegistradas(token),
+          obtenerTurnos(token),
+        ])
+
+        const estados: Record<string, Inscripcion['estado']> = {
+          CONFIRMADA: 'Confirmada',
+          LISTA_ESPERA: 'Lista de espera',
+          CANCELADA: 'Cancelada',
+        }
+
+        const datos: Inscripcion[] = registros.map((registro) => {
+          const turno = turnos.find(
+            (turno) => turno.id === registro.turno_id
+          )
+
+          return {
+            ...registro,
+            turno: turno?.nombre ?? `Turno ${registro.turno_id}`,
+            sede: turno?.sede ?? 'Sede no disponible',
+            fecha_inscripcion: registro.creado_en.slice(0, 10),
+            estado: estados[registro.estado],
+            posicion_espera: registro.posicion_espera ?? undefined,
+          }
+        })
+
+        if (activo) {
+          setInscripciones(datos)
+        }
+      } catch (error) {
+        if (activo) {
+          setErrorCarga(
+            error instanceof Error
+              ? error.message
+              : 'No se pudieron cargar las inscripciones.'
+          )
+        }
+      } finally {
+        if (activo) {
+          setCargando(false)
+        }
+      }
+    }
+
+    void cargarInscripciones()
+
+    return () => {
+      activo = false
+    }
+  }, [])
 
   // Filtrar por nombre, apellido, DNI y estado
   const inscripcionesFiltradas = inscripciones.filter(
@@ -143,8 +208,23 @@ function InscripcionesRegistradasPage() {
               : 'resultados'}
           </p>
 
+          {cargando && (
+            <p role="status" className="mb-4 text-sm text-slate-600">
+              Cargando inscripciones...
+            </p>
+          )}
+
+          {!cargando && errorCarga && (
+            <p
+              role="alert"
+              className="mb-4 rounded-xl bg-red-50 p-4 text-red-700"
+            >
+              {errorCarga}
+            </p>
+          )}
+
           {/* Tarjetas de inscripciones */}
-          {resultadosOrdenados.length > 0 ? (
+          {cargando || errorCarga ? null : resultadosOrdenados.length > 0 ? (
 
             <div className="flex flex-col gap-4">
 
@@ -197,9 +277,8 @@ function InscripcionesRegistradasPage() {
           <Info size={20} className="shrink-0" />
 
           <p>
-            Las inscripciones mostradas son datos de ejemplo.
-            Se reemplazarán con los registros reales cuando
-            integremos FastAPI.
+            Las inscripciones mostradas corresponden a los registros
+            guardados en el sistema para la temporada actual.
           </p>
 
         </div>

@@ -14,6 +14,7 @@ class InscripcionCreate(BaseModel):
     telefono_tutor:str=Field(min_length=6,max_length=50)
 
 class InscripcionOut(BaseModel):
+    fecha_nacimiento: date
     id:int; turno_id:int; temporada:int; dni_chico:str; nombre_chico:str; apellido_chico:str; estado:str; posicion_espera:int|None; creado_en:datetime
 
 class AdminInscripcionOut(InscripcionOut):

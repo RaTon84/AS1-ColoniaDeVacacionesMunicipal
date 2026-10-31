@@ -21,6 +21,7 @@ class Inscripcion(Base):
     fecha_nacimiento: Mapped[date]=mapped_column(Date,nullable=False)
     dni_tutor: Mapped[str]=mapped_column(String(20),nullable=False)
     nombre_tutor: Mapped[str]=mapped_column(String(120),nullable=False)
+    apellido_tutor: Mapped[str]=mapped_column(String(120),nullable=False)
     email_tutor: Mapped[str]=mapped_column(String(180),nullable=False)
     telefono_tutor: Mapped[str]=mapped_column(String(50),nullable=False)
     estado: Mapped[str]=mapped_column(String(30),nullable=False)

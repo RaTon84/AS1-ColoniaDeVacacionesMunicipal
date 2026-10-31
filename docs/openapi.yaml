@@ -133,7 +133,8 @@ paths:
               apellido_chico: Perez
               fecha_nacimiento: '2017-06-15'
               dni_tutor: '30111222'
-              nombre_tutor: Maria Perez
+              nombre_tutor: Maria
+              apellido_tutor: Perez
               email_tutor: maria.perez@example.com
               telefono_tutor: '1123456789'
       responses:
@@ -377,6 +378,7 @@ components:
         - fecha_nacimiento
         - dni_tutor
         - nombre_tutor
+        - apellido_tutor
         - email_tutor
         - telefono_tutor
       properties:
@@ -413,7 +415,12 @@ components:
           type: string
           minLength: 2
           maxLength: 120
-          example: Maria Perez
+          example: Maria
+        apellido_tutor:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: Perez
         email_tutor:
           type: string
           format: email
@@ -464,14 +471,17 @@ components:
       allOf:
         - $ref: '#/components/schemas/Inscripcion'
         - type: object
-          required: [dni_tutor, nombre_tutor, email_tutor, telefono_tutor, creado_por]
+          required: [dni_tutor, nombre_tutor, apellido_tutor, email_tutor, telefono_tutor, creado_por]         
           properties:
             dni_tutor:
               type: string
               example: '30111222'
             nombre_tutor:
               type: string
-              example: Maria Perez
+              example: Maria 
+            apellido_tutor:
+              type: string
+              example: Perez
             email_tutor:
               type: string
               format: email

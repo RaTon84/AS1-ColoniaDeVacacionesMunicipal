@@ -1,5 +1,4 @@
-
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import {
   CalendarDays,
   UsersRound,
@@ -7,6 +6,11 @@ import {
   ArrowRight,
   Info,
 } from 'lucide-react'
+
+import keycloak from '../../auth/keycloak'
+import { obtenerTurnos } from '../../services/turnos'
+import type { Turno } from '../../types/turno'
+import { crearInscripcion } from '../../services/inscripciones'
 
 interface FormularioInscripcion {
   turno_id: string
@@ -38,8 +42,51 @@ const estiloInput =
   'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
 
 function NuevaInscripcionPage() {
-  const [formulario, setFormulario] =
-    useState<FormularioInscripcion>(datosIniciales)
+  const [formulario, setFormulario] = useState<FormularioInscripcion>(datosIniciales)
+  const [turnos, setTurnos] = useState<Turno[]>([])
+  const [cargandoTurnos, setCargandoTurnos] = useState(true)
+  const [errorTurnos, setErrorTurnos] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [errorInscripcion, setErrorInscripcion] = useState('')
+  const [mensajeExito, setMensajeExito] = useState('')
+
+    useEffect(() => {
+    let activo = true
+
+    async function cargarTurnos() {
+      try {
+        await keycloak.updateToken(30)
+
+        if (!keycloak.token) {
+          throw new Error('No hay una sesión activa. Volvé a iniciar sesión.')
+        }
+
+        const datos = await obtenerTurnos(keycloak.token)
+
+        if (activo) {
+          setTurnos(datos)
+        }
+      } catch (error) {
+        if (activo) {
+          setErrorTurnos(
+            error instanceof Error
+              ? error.message
+              : 'No se pudieron cargar los turnos'
+          )
+        }
+      } finally {
+        if (activo) {
+          setCargandoTurnos(false)
+        }
+      }
+    }
+
+    void cargarTurnos()
+
+    return () => {
+      activo = false
+    }
+  }, [])
 
   function actualizarCampo(
     campo: keyof FormularioInscripcion,
@@ -51,13 +98,59 @@ function NuevaInscripcionPage() {
     }))
   }
 
-  // Envío pendiente de conexión con FastAPI
-  function manejarEnvio(evento: FormEvent<HTMLFormElement>) {
+   async function manejarEnvio(
+    evento: FormEvent<HTMLFormElement>
+  ) {
     evento.preventDefault()
 
-    // Todavía no enviamos datos al backend.
-    // Primero debemos integrar Keycloak y revisar
-    // el contrato de inscripción.
+    if (enviando || mensajeExito) return
+
+    setErrorInscripcion('')
+    setMensajeExito('')
+
+    if (!formulario.turno_id) {
+      setErrorInscripcion('Seleccioná un turno.')
+      return
+    }
+
+    setEnviando(true)
+
+    try {
+      await keycloak.updateToken(30)
+
+      if (!keycloak.token) {
+        throw new Error(
+          'No hay una sesión activa. Volvé a iniciar sesión.'
+        )
+      }
+
+      const resultado = await crearInscripcion(
+        {
+          ...formulario,
+          turno_id: Number(formulario.turno_id),
+        },
+        keycloak.token
+      )
+
+      if (resultado.estado === 'CONFIRMADA') {
+        setMensajeExito(
+          `Inscripción N.º ${resultado.id} confirmada.`
+        )
+      } else if (resultado.estado === 'LISTA_ESPERA') {
+        setMensajeExito(
+          `Inscripción N.º ${resultado.id} en lista de espera. ` +
+          `Posición: ${resultado.posicion_espera}.`
+        )
+      }
+    } catch (error) {
+      setErrorInscripcion(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo registrar la inscripción.'
+      )
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -101,7 +194,7 @@ function NuevaInscripcionPage() {
               Turno disponible *
             </label>
 
-            <select
+                        <select
               id="turno"
               value={formulario.turno_id}
               onChange={(e) =>
@@ -109,18 +202,43 @@ function NuevaInscripcionPage() {
               }
               className={estiloInput}
               required
-              disabled
+              disabled={
+                cargandoTurnos ||
+                Boolean(errorTurnos) ||
+                turnos.length === 0
+              }
             >
               <option value="">
-                Pendiente de conexión con el sistema de turnos
+                {cargandoTurnos
+                  ? 'Cargando turnos...'
+                  : errorTurnos
+                    ? 'No se pudieron cargar los turnos'
+                    : turnos.length === 0
+                      ? 'No hay turnos habilitados'
+                      : 'Seleccioná un turno'}
               </option>
+
+              {turnos.map((turno) => (
+                <option key={turno.id} value={turno.id}>
+                  {turno.nombre} · {turno.sede} ·{' '}
+                  {turno.cupos_disponibles > 0
+                    ? `${turno.cupos_disponibles} cupos disponibles`
+                    : 'Lista de espera'}
+                </option>
+              ))}
             </select>
+
+            {errorTurnos && (
+              <p role="alert" className="mt-3 text-sm text-red-700">
+                {errorTurnos}
+              </p>
+            )}
 
             <div className="mt-4 flex gap-2 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
               <Info size={20} className="shrink-0" />
               <p>
-                Los turnos disponibles se cargarán desde el sistema
-                cuando integremos la autenticación con Keycloak.
+                Si el turno está completo, la solicitud ingresará
+                a la lista de espera.
               </p>
             </div>
 
@@ -372,14 +490,37 @@ function NuevaInscripcionPage() {
 
             </div>
           </section>
+          {errorInscripcion && (
+            <p
+              role="alert"
+              className="rounded-xl bg-red-50 p-4 text-red-700"
+            >
+              {errorInscripcion}
+            </p>
+          )}
 
+          {mensajeExito && (
+            <p
+              role="status"
+              className="rounded-xl bg-green-50 p-4 text-green-800"
+            >
+              {mensajeExito}
+            </p>
+          )}
+          
           <div className="flex justify-end pb-6">
             <button
               type="submit"
-              disabled
+              disabled={
+                enviando ||
+                cargandoTurnos ||
+                Boolean(errorTurnos) ||
+                !formulario.turno_id ||
+                Boolean(mensajeExito)
+              }
               className="flex items-center gap-2 rounded-xl bg-blue-700 px-6 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
-              Solicitar inscripción
+              {enviando ? 'Registrando...' : 'Solicitar inscripción'}
               <ArrowRight size={20} />
             </button>
           </div>

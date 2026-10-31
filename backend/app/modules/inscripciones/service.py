@@ -66,6 +66,7 @@ class InscripcionService:
                     fecha_nacimiento=payload.fecha_nacimiento,
                     dni_tutor=payload.dni_tutor.strip(),
                     nombre_tutor=payload.nombre_tutor.strip(),
+                    apellido_tutor=payload.apellido_tutor.strip(),
                     email_tutor=str(payload.email_tutor),
                     telefono_tutor=payload.telefono_tutor.strip(),
                     estado=estado,

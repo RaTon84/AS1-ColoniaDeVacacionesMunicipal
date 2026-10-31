@@ -1,0 +1,628 @@
+openapi: 3.0.3
+info:
+  title: API - Colonia de Vacaciones Municipal 6A
+  version: 1.0.0
+  description: |
+    Contrato OpenAPI de la API del Sistema de Inscripción a la Colonia Municipal.
+    Este archivo es la fuente de verdad de la interfaz HTTP (enfoque Contract First).
+    La implementación FastAPI debe respetar las operaciones, esquemas, respuestas y seguridad aquí definidos.
+
+    **Errores:** todas las respuestas de error usan Problem Details (RFC 9457, antes RFC 7807)
+    con `Content-Type: application/problem+json`.
+
+    **Versionado:** la versión va en la URI (`/api/v1`). Un cambio incompatible se publica como `/api/v2`.
+
+    **Probar con login:** botón *Authorize* → `keycloak` (usuarios de prueba en el README).
+servers:
+  - url: http://localhost:8000
+    description: Aplicación levantada con Docker Compose (vista desde el navegador)
+
+tags:
+  - name: Sistema
+  - name: Turnos
+  - name: Inscripciones
+  - name: Administración
+
+paths:
+  /api/v1/health:
+    get:
+      tags: [Sistema]
+      summary: Consultar estado de la aplicación y sus dependencias
+      description: Público. Responde 503 con `status` en `degraded` si la base, Keycloak o el padrón no responden.
+      operationId: obtenerHealth
+      responses:
+        '200':
+          description: Estado de la API y sus dependencias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Algún componente no responde (el cuerpo indica cuál)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: degraded
+                api: ok
+                database: ok
+                keycloak: ok
+                padron: error
+
+  /api/v1/system-info:
+    get:
+      tags: [Sistema]
+      summary: Consultar información técnica del sistema
+      description: Requiere rol administrador_sistema.
+      operationId: obtenerSystemInfo
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Información técnica del sistema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemInfoResponse'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+
+  /api/v1/config:
+    get:
+      tags: [Sistema]
+      summary: Obtener configuración pública necesaria para la aplicación
+      description: Público. La SPA lo usa para iniciar el login con Keycloak.
+      operationId: obtenerConfigPublica
+      responses:
+        '200':
+          description: Configuración pública
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicConfigResponse'
+
+  /api/v1/turnos:
+    get:
+      tags: [Turnos]
+      summary: Listar turnos de la temporada vigente y sus cupos disponibles
+      description: Requiere estar autenticado (cualquier rol).
+      operationId: listarTurnos
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de turnos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Turno'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+
+  /api/v1/inscripciones:
+    post:
+      tags: [Inscripciones]
+      summary: Registrar una inscripción a un turno
+      description: |
+        Registra la inscripción aplicando las reglas de edad, residencia, inscripción única
+        y disponibilidad de cupos. Si no quedan cupos, la inscripción se registra en lista de espera.
+        Requiere rol tutor, administrativo o administrador_sistema.
+
+        No es idempotente: repetir el mismo pedido devuelve 409 y no crea una segunda inscripción.
+      operationId: crearInscripcion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InscripcionNueva'
+            example:
+              turno_id: 1
+              dni_chico: '50111222'
+              nombre_chico: Juan
+              apellido_chico: Perez
+              fecha_nacimiento: '2017-06-15'
+              dni_tutor: '30111222'
+              nombre_tutor: Maria Perez
+              email_tutor: maria.perez@example.com
+              telefono_tutor: '1123456789'
+      responses:
+        '201':
+          description: Inscripción registrada (CONFIRMADA o LISTA_ESPERA)
+          headers:
+            Location:
+              description: URI de la inscripción creada
+              schema:
+                type: string
+                example: /api/v1/inscripciones/10
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inscripcion'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
+        '503':
+          $ref: '#/components/responses/ServicioNoDisponible'
+
+  /api/v1/inscripciones/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          example: 10
+    get:
+      tags: [Inscripciones]
+      summary: Obtener una inscripción
+      description: |
+        Requiere estar autenticado. Un tutor solo puede ver las inscripciones que cargó;
+        los roles administrativo y administrador_sistema ven cualquiera.
+        Si la inscripción es de otro tutor se responde 404, para no revelar que existe.
+      operationId: obtenerInscripcion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: La inscripción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inscripcion'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '404':
+          description: La inscripción no existe o no pertenece al usuario
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: /problemas/inscripcion-inexistente
+                title: Inscripción inexistente
+                status: 404
+                detail: No existe la inscripción 99
+                instance: /api/v1/inscripciones/99
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
+
+  /api/v1/mis-inscripciones:
+    get:
+      tags: [Inscripciones]
+      summary: Consultar las inscripciones del usuario autenticado
+      description: Requiere estar autenticado (cualquier rol).
+      operationId: listarMisInscripciones
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Inscripciones asociadas al usuario autenticado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Inscripcion'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+
+  /api/v1/admin/inscripciones:
+    get:
+      tags: [Administración]
+      summary: Consultar todas las inscripciones de la temporada vigente
+      description: Requiere rol administrativo o administrador_sistema.
+      operationId: listarInscripcionesAdministracion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista administrativa de inscripciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InscripcionAdministracion'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+
+components:
+  securitySchemes:
+    keycloak:
+      type: oauth2
+      description: Login con Keycloak mediante Authorization Code + PKCE.
+      flows:
+        authorizationCode:
+          authorizationUrl: http://localhost:8080/realms/colonia/protocol/openid-connect/auth
+          tokenUrl: http://localhost:8080/realms/colonia/protocol/openid-connect/token
+          scopes: {}
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT emitido por el proveedor de identidad Keycloak/OIDC.
+
+  schemas:
+    EstadoServicios:
+      type: object
+      required: [api, database, keycloak, padron]
+      properties:
+        api:
+          type: string
+          enum: [ok, error]
+          example: ok
+        database:
+          type: string
+          enum: [ok, error]
+          example: ok
+        keycloak:
+          type: string
+          enum: [ok, error]
+          example: ok
+        padron:
+          type: string
+          enum: [ok, error]
+          example: ok
+
+    HealthResponse:
+      allOf:
+        - type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [ok, degraded]
+              example: ok
+        - $ref: '#/components/schemas/EstadoServicios'
+
+    SystemInfoResponse:
+      type: object
+      required: [app, environment, temporada, version, services]
+      properties:
+        app:
+          type: string
+          example: Colonia de Vacaciones 6A
+        environment:
+          type: string
+          example: dev
+        temporada:
+          type: integer
+          example: 2027
+        version:
+          type: string
+          example: 1.1.0
+        services:
+          $ref: '#/components/schemas/EstadoServicios'
+
+    PublicConfigResponse:
+      type: object
+      required: [keycloakUrl, realm, clientId, apiBase]
+      properties:
+        keycloakUrl:
+          type: string
+          example: http://localhost:8080
+        realm:
+          type: string
+          example: colonia
+        clientId:
+          type: string
+          example: colonia-spa
+        apiBase:
+          type: string
+          example: /api/v1
+
+    Turno:
+      type: object
+      required: [id, nombre, sede, fecha_desde, fecha_hasta, cupo_total, temporada, cupos_disponibles]
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Turno mañana - Enero
+        sede:
+          type: string
+          example: Polideportivo Municipal
+        fecha_desde:
+          type: string
+          format: date
+          example: '2027-01-06'
+        fecha_hasta:
+          type: string
+          format: date
+          example: '2027-01-24'
+        cupo_total:
+          type: integer
+          minimum: 0
+          example: 200
+        temporada:
+          type: integer
+          example: 2027
+        cupos_disponibles:
+          type: integer
+          minimum: 0
+          example: 125
+
+    InscripcionNueva:
+      type: object
+      required:
+        - turno_id
+        - dni_chico
+        - nombre_chico
+        - apellido_chico
+        - fecha_nacimiento
+        - dni_tutor
+        - nombre_tutor
+        - email_tutor
+        - telefono_tutor
+      properties:
+        turno_id:
+          type: integer
+          example: 1
+        dni_chico:
+          type: string
+          minLength: 6
+          maxLength: 20
+          example: '50111222'
+        nombre_chico:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Juan
+        apellido_chico:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Perez
+        fecha_nacimiento:
+          type: string
+          format: date
+          description: El chico debe tener entre 6 y 12 años al 1 de enero de la temporada.
+          example: '2017-06-15'
+        dni_tutor:
+          type: string
+          minLength: 6
+          maxLength: 20
+          description: Se valida contra el padrón de residentes.
+          example: '30111222'
+        nombre_tutor:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: Maria Perez
+        email_tutor:
+          type: string
+          format: email
+          example: maria.perez@example.com
+        telefono_tutor:
+          type: string
+          minLength: 6
+          maxLength: 50
+          example: '1123456789'
+
+    Inscripcion:
+      type: object
+      required: [id, turno_id, temporada, dni_chico, nombre_chico, apellido_chico, estado, posicion_espera, creado_en]
+      properties:
+        id:
+          type: integer
+          example: 10
+        turno_id:
+          type: integer
+          example: 1
+        temporada:
+          type: integer
+          example: 2027
+        dni_chico:
+          type: string
+          example: '50111222'
+        nombre_chico:
+          type: string
+          example: Juan
+        apellido_chico:
+          type: string
+          example: Perez
+        estado:
+          type: string
+          enum: [CONFIRMADA, LISTA_ESPERA, CANCELADA]
+          example: CONFIRMADA
+        posicion_espera:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: Posición en la lista de espera del turno; null si está confirmada.
+          example: null
+        creado_en:
+          type: string
+          format: date-time
+
+    InscripcionAdministracion:
+      allOf:
+        - $ref: '#/components/schemas/Inscripcion'
+        - type: object
+          required: [dni_tutor, nombre_tutor, email_tutor, telefono_tutor, creado_por]
+          properties:
+            dni_tutor:
+              type: string
+              example: '30111222'
+            nombre_tutor:
+              type: string
+              example: Maria Perez
+            email_tutor:
+              type: string
+              format: email
+              example: maria.perez@example.com
+            telefono_tutor:
+              type: string
+              example: '1123456789'
+            creado_por:
+              type: string
+              description: Identificador del usuario autenticado que creó la inscripción.
+              example: 8d53d73d-ef3a-4e3c-a865-2df95fd188f0
+
+    ProblemDetails:
+      description: Formato de error estándar (RFC 9457, antes RFC 7807)
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          description: Identifica el tipo de problema (about:blank para errores HTTP genéricos)
+          example: /problemas/inscripcion-duplicada
+        title:
+          type: string
+          example: Inscripción duplicada
+        status:
+          type: integer
+          example: 409
+        detail:
+          type: string
+          example: El chico ya está inscripto en esta temporada
+        instance:
+          type: string
+          example: /api/v1/inscripciones
+        errors:
+          type: array
+          description: Solo en errores de validación, un elemento por campo inválido.
+          items:
+            type: object
+            properties:
+              campo:
+                type: string
+                example: email_tutor
+              mensaje:
+                type: string
+                example: value is not a valid email address
+
+  responses:
+    NoAutenticado:
+      description: Falta el token de acceso o el token es inválido/vencido
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            example: Bearer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: about:blank
+            title: Unauthorized
+            status: 401
+            detail: Falta token de acceso
+            instance: /api/v1/turnos
+
+    Prohibido:
+      description: El usuario autenticado no posee un rol habilitado para la operación
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: about:blank
+            title: Forbidden
+            status: 403
+            detail: No tiene permisos para realizar esta acción
+            instance: /api/v1/admin/inscripciones
+
+    NoEncontrado:
+      description: El recurso solicitado no existe
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: /problemas/turno-inexistente
+            title: Turno inexistente
+            status: 404
+            detail: No existe el turno 99 en la temporada 2027
+            instance: /api/v1/inscripciones
+
+    Conflicto:
+      description: La operación viola una regla de unicidad o entra en conflicto con el estado actual
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: /problemas/inscripcion-duplicada
+            title: Inscripción duplicada
+            status: 409
+            detail: El chico ya está inscripto en esta temporada
+            instance: /api/v1/inscripciones
+
+    DatosInvalidos:
+      description: Los datos no cumplen las validaciones o reglas de negocio
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            edad:
+              value:
+                type: /problemas/edad-fuera-de-rango
+                title: Edad fuera de rango
+                status: 422
+                detail: La colonia admite chicos de 6 a 12 años al inicio de la temporada
+                instance: /api/v1/inscripciones
+            residencia:
+              value:
+                type: /problemas/no-residente
+                title: No figura en el padrón de residentes
+                status: 422
+                detail: El tutor no figura con domicilio en la jurisdicción
+                instance: /api/v1/inscripciones
+            validacion:
+              value:
+                type: /problemas/datos-invalidos
+                title: Datos inválidos
+                status: 422
+                detail: Revise los campos indicados en «errors».
+                instance: /api/v1/inscripciones
+                errors:
+                  - campo: email_tutor
+                    mensaje: value is not a valid email address
+
+    ServicioNoDisponible:
+      description: El padrón municipal no se encuentra disponible
+      headers:
+        Retry-After:
+          description: Segundos sugeridos antes de reintentar
+          schema:
+            type: integer
+            example: 30
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: /problemas/padron-no-disponible
+            title: Padrón no disponible
+            status: 503
+            detail: El padrón no está disponible. Reintente más tarde.
+            instance: /api/v1/inscripciones

@@ -3,6 +3,7 @@ export type EstadoInscripcion = 'Confirmada' | 'En revisión' | 'Lista de espera
 
 export interface Inscripcion {
   id: number
+  turno_id: number
   nombre_chico: string
   apellido_chico: string
   dni_chico: string
@@ -23,6 +24,7 @@ export interface Inscripcion {
 export const inscripcionesEjemplo: Inscripcion[] = [
   {
     id: 1,
+    turno_id: 1,
     nombre_chico: 'Juan',
     apellido_chico: 'Pérez',
     dni_chico: '00000001',
@@ -40,6 +42,7 @@ export const inscripcionesEjemplo: Inscripcion[] = [
   },
   {
     id: 2,
+    turno_id: 2,
     nombre_chico: 'Sofía',
     apellido_chico: 'Pérez',
     dni_chico: '00000002',
@@ -58,6 +61,7 @@ export const inscripcionesEjemplo: Inscripcion[] = [
   
 {
   id: 3,
+  turno_id: 2,
   nombre_chico: 'Martina',
   apellido_chico: 'López',
   dni_chico: '00000003',

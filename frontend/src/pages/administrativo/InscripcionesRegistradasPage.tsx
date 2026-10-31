@@ -8,6 +8,7 @@ import type { Inscripcion } from '../../data/inscripcionesEjemplo'
 import keycloak from '../../auth/keycloak'
 import { obtenerInscripcionesRegistradas } from '../../services/inscripciones'
 import { obtenerTurnos } from '../../services/turnos'
+import type { Turno } from '../../types/turno'
 
 type FiltroEstado = 'Todas' | Inscripcion['estado']
 
@@ -19,6 +20,8 @@ function InscripcionesRegistradasPage() {
   const [inscripciones, setInscripciones] = useState<Inscripcion[]>([])
   const [cargando, setCargando] = useState(true)
   const [errorCarga, setErrorCarga] = useState('')
+  const [turnos, setTurnos] = useState<Turno[]>([])
+  const [filtroTurno, setFiltroTurno] = useState('')
 
     useEffect(() => {
     let activo = true
@@ -61,6 +64,7 @@ function InscripcionesRegistradasPage() {
 
         if (activo) {
           setInscripciones(datos)
+          setTurnos(turnos)
         }
       } catch (error) {
         if (activo) {
@@ -101,7 +105,11 @@ function InscripcionesRegistradasPage() {
         filtroEstado === 'Todas' ||
         inscripcion.estado === filtroEstado
 
-      return coincideBusqueda && coincideEstado
+      const coincideTurno =
+        filtroTurno === '' ||
+        inscripcion.turno_id === Number(filtroTurno)
+
+      return coincideBusqueda && coincideEstado && coincideTurno
     }
   )
 
@@ -198,6 +206,21 @@ function InscripcionesRegistradasPage() {
               <option value="Lista de espera">Lista de espera</option>
             </select>
 
+                        <select
+              value={filtroTurno}
+              onChange={(e) => setFiltroTurno(e.target.value)}
+              aria-label="Filtrar por turno"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="">Todos los turnos</option>
+
+              {turnos.map((turno) => (
+                <option key={turno.id} value={turno.id}>
+                  {turno.nombre} · {turno.sede}
+                </option>
+              ))}
+            </select>
+
           </div>
 
           {/* Cantidad de resultados */}
@@ -259,6 +282,7 @@ function InscripcionesRegistradasPage() {
                 onClick={() => {
                   setBusqueda('')
                   setFiltroEstado('Todas')
+                  setFiltroTurno('')
                 }}
                 className="mt-4 rounded-lg px-4 py-2 text-sm font-semibold text-[#1769B3] hover:bg-blue-50"
               >

@@ -285,7 +285,7 @@ function GestionInscripcionPage() {
   const enEspera = inscripciones.filter((i) => i.estado === 'Lista de espera').length
 
   return (
-    <div className="bg-[#F5F9FC] px-5 py-8 lg:px-10">
+    <div className="bg-transparent px-5 py-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 

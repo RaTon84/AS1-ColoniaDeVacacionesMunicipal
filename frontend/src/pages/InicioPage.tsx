@@ -5,7 +5,7 @@ import InformacionColonia from '../components/InformacionColonia'
 
 function InicioPage() {
   return (
-    <div className="flex min-h-[calc(100dvh-80px)] flex-col bg-[#F5F9FC]">
+    <div className="flex min-h-[calc(100dvh-80px)] flex-col bg-transparent">
 
       <div className="shrink-0">
         <BannerBienvenida />

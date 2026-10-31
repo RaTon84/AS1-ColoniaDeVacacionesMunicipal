@@ -51,7 +51,7 @@ function InscripcionesRegistradasPage() {
       : inscripcionesFiltradas
 
   return (
-    <div className="bg-[#F5F9FC] px-5 py-8 lg:px-10">
+    <div className="bg-transparent px-5 py-8 lg:px-10">
 
       <div className="mx-auto max-w-7xl">
 

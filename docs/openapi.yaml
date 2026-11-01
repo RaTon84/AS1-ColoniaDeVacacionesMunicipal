@@ -116,6 +116,7 @@ paths:
         Requiere rol tutor, administrativo o administrador_sistema.
 
         No es idempotente: repetir el mismo pedido devuelve 409 y no crea una segunda inscripción.
+        Un chico cuya inscripción fue cancelada se puede volver a inscribir: entra como un pedido nuevo.
       operationId: crearInscripcion
       security:
         - keycloak: []

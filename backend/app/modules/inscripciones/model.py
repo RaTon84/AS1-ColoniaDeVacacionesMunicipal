@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from enum import Enum
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, String, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -11,7 +11,8 @@ class EstadoInscripcion(str, Enum):
 
 class Inscripcion(Base):
     __tablename__="inscripciones"
-    __table_args__=(UniqueConstraint("dni_chico","temporada",name="uq_dni_chico_temporada"),)
+    # Un chico no puede tener dos inscripciones activas en la temporada. Las canceladas no cuentan: se puede reinscribir.
+    __table_args__=(Index("uq_dni_chico_temporada_activa","dni_chico","temporada",unique=True,postgresql_where=text("estado <> 'CANCELADA'"),sqlite_where=text("estado <> 'CANCELADA'")),)
     id: Mapped[int]=mapped_column(primary_key=True)
     turno_id: Mapped[int]=mapped_column(ForeignKey("turnos.id",ondelete="RESTRICT"),index=True)
     temporada: Mapped[int]=mapped_column(Integer,nullable=False,index=True)

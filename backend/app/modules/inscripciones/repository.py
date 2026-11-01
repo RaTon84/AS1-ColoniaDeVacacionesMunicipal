@@ -1,10 +1,10 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from app.modules.inscripciones.model import Inscripcion
+from app.modules.inscripciones.model import EstadoInscripcion, Inscripcion
 
 class InscripcionRepository:
     def exists_for_dni_and_season(self, db:Session,dni:str,temporada:int)->bool:
-        return db.scalar(select(Inscripcion.id).where(Inscripcion.dni_chico==dni,Inscripcion.temporada==temporada).limit(1)) is not None
+        return db.scalar(select(Inscripcion.id).where(Inscripcion.dni_chico==dni,Inscripcion.temporada==temporada,Inscripcion.estado!=EstadoInscripcion.CANCELADA.value).limit(1)) is not None
     def add(self,db:Session,inscription:Inscripcion)->Inscripcion:
         db.add(inscription); db.flush(); db.refresh(inscription); return inscription
     def get(self,db:Session,inscripcion_id:int)->Inscripcion|None:

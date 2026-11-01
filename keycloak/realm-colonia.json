@@ -1,7 +1,13 @@
 {
   "realm": "colonia",
   "enabled": true,
+  "loginTheme": "colonia",
   "displayName": "Colonia de Vacaciones",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "es"
+  ],
+  "defaultLocale": "es",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "roles": {

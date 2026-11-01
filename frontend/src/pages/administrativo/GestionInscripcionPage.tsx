@@ -254,6 +254,18 @@ function GestionInscripcionPage() {
           </Link>
         </header>
 
+        {cargando && (
+          <p role="status" className="mb-4 text-sm text-slate-600">
+            Cargando inscripciones...
+          </p>
+        )}
+
+        {error && (
+          <p role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">
+            {error}
+          </p>
+        )}
+
         <section
           aria-label="Resumen de inscripciones"
           className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"

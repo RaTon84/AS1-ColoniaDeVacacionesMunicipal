@@ -35,7 +35,7 @@ Documentación completa en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) y decisi
 Requisito: Docker Desktop (o Podman Desktop) funcionando.
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
 No hace falta crear un `.env`: cada variable tiene un valor por defecto. Para cambiar alguno, copiar
@@ -45,15 +45,15 @@ Para empezar de cero (borra los datos de PostgreSQL):
 
 ```bash
 docker compose down -v
-docker compose up --build
+docker compose up -d --build
 ```
 
 ## URLs
 
 | Servicio | URL |
 |---|---|
-| Aplicación (desde el issue #2) | http://localhost:8000 |
-| Swagger / OpenAPI (desde el issue #2) | http://localhost:8000/docs |
+| Aplicación | http://localhost:8000 |
+| Documentación de la API (Swagger UI, desde `docs/openapi.yaml`) | http://localhost:8082 |
 | Keycloak | http://localhost:8080 (consola: `/admin`, usuario `admin`, clave `admin_demo_cambiar`) |
 | Mock del padrón (WireMock) | http://localhost:8081/__admin/ |
 

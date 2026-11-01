@@ -104,3 +104,41 @@ export async function cancelarInscripcion(
 
   return await respuesta.json()
 }
+
+export interface InscripcionTutor {
+  id: number
+  turno_id: number
+  temporada: number
+  dni_chico: string
+  nombre_chico: string
+  apellido_chico: string
+  fecha_nacimiento: string
+  dni_tutor: string
+  nombre_tutor: string
+  apellido_tutor: string
+  email_tutor: string
+  telefono_tutor: string
+  estado: 'CONFIRMADA' | 'LISTA_ESPERA' | 'CANCELADA'
+  posicion_espera: number | null
+  creado_en: string
+}
+
+export async function obtenerMisInscripciones(
+  token: string
+): Promise<InscripcionTutor[]> {
+  const respuesta = await fetch('/api/v1/mis-inscripciones', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!respuesta.ok) {
+    const problema = await respuesta.json().catch(() => null)
+
+    throw new Error(
+      problema?.detail || 'No se pudieron obtener tus inscripciones'
+    )
+  }
+
+  return await respuesta.json()
+}

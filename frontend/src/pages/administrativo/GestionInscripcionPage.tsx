@@ -241,7 +241,7 @@ function GestionInscripcionPage() {
             </h1>
 
             <p className="mt-2 text-slate-600">
-              Consultá las solicitudes, los cupos y las revisiones.
+              Consultá las inscripciones y la disponibilidad de cupos.
             </p>
           </div>
 
@@ -293,9 +293,7 @@ function GestionInscripcionPage() {
           <Info size={20} className="shrink-0" />
 
           <p>
-            Los datos, cupos y estados mostrados son ficticios. Las
-            confirmaciones, rechazos y asignaciones de cupos se realizarán
-            mediante FastAPI cuando integremos el backend.
+            Los datos mostrados corresponden a las inscripciones y los cupos registrados en el sistema.
           </p>
         </div>
       </div>

@@ -35,6 +35,7 @@ def upgrade():
         sa.Column("fecha_nacimiento", sa.Date(), nullable=False),
         sa.Column("dni_tutor", sa.String(length=20), nullable=False),
         sa.Column("nombre_tutor", sa.String(length=120), nullable=False),
+        sa.Column("apellido_tutor", sa.String(length=120), nullable=False),
         sa.Column("email_tutor", sa.String(length=180), nullable=False),
         sa.Column("telefono_tutor", sa.String(length=50), nullable=False),
         sa.Column("estado", sa.String(length=30), nullable=False),

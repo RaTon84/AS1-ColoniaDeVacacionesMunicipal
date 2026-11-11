@@ -114,6 +114,49 @@ function NuevaInscripcionPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (periodo?.estado !== 'abierto' || cargandoTurnos) return
+
+    let activo = true
+    let temporizador: number | undefined
+
+    async function actualizarDisponibilidad() {
+      try {
+        await keycloak.updateToken(30)
+
+        if (!keycloak.token) {
+          throw new Error('No hay una sesión activa. Volvé a iniciar sesión.')
+        }
+
+        const datos = await obtenerTurnos(keycloak.token)
+
+        if (activo) {
+          setTurnos(datos)
+          setErrorTurnos('')
+        }
+      } catch (error) {
+        if (activo) {
+          setErrorTurnos(
+            error instanceof Error
+              ? error.message
+              : 'No se pudieron actualizar los cupos.'
+          )
+        }
+      } finally {
+        if (activo) {
+          temporizador = window.setTimeout(actualizarDisponibilidad, 10_000)
+        }
+      }
+    }
+
+    temporizador = window.setTimeout(actualizarDisponibilidad, 10_000)
+
+    return () => {
+      activo = false
+      window.clearTimeout(temporizador)
+    }
+  }, [periodo?.estado, cargandoTurnos])
+
   function actualizarCampo(
     campo: keyof FormularioInscripcion,
     valor: string

@@ -22,12 +22,13 @@ import {
   obtenerPeriodoInscripcion,
   type PeriodoInscripcion,
 } from "../../services/sistema";
+import { obtenerTurnos } from "../../services/turnos";
+import type { Turno } from "../../types/turno";
 
-const configuracion = {
-  cuposPrevistos: 600,
-};
-
+const MAX_CUPOS_TEMPORADA = 600;
 const urlConfiguracion = "/api/v1/admin/configuracion-temporada";
+
+type TurnoEditable = Turno & { cupoEditable: string };
 
 interface ConfiguracionTemporada {
   temporada: number;
@@ -105,6 +106,21 @@ function AdministracionSistemaPage() {
   const [edadMaxima, setEdadMaxima] = useState("");
   const [guardandoConfiguracion, setGuardandoConfiguracion] = useState(false);
   const [errorConfiguracion, setErrorConfiguracion] = useState("");
+
+  const [turnosCupos, setTurnosCupos] = useState<TurnoEditable[] | null>(null);
+  const [guardandoCupos, setGuardandoCupos] = useState(false);
+  const [errorCupos, setErrorCupos] = useState("");
+  const [cuposGuardados, setCuposGuardados] = useState(false);
+
+  const totalGuardado = turnosCupos?.reduce(
+    (total, turno) => total + turno.cupo_total,
+    0,
+  );
+  const totalBorrador = turnosCupos?.reduce(
+    (total, turno) => total + Number(turno.cupoEditable),
+    0,
+  ) ?? 0;
+  const superaLimite = totalBorrador > MAX_CUPOS_TEMPORADA;
 
   useEffect(() => {
     let activo = true;
@@ -228,10 +244,122 @@ function AdministracionSistemaPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (temporadaGuardada === null) return;
+
+    let activo = true;
+
+    async function cargarTurnosCupos() {
+      try {
+        await keycloak.updateToken(30);
+
+        if (!keycloak.token) {
+          throw new Error("Volvé a iniciar sesión.");
+        }
+
+        const turnos = await obtenerTurnos(keycloak.token);
+        if (!activo) return;
+
+        if (turnos.some((turno) => turno.temporada !== temporadaGuardada)) {
+          throw new Error("La temporada activa cambió. Recargá el panel.");
+        }
+
+        setTurnosCupos(
+          turnos.map((turno) => ({
+            ...turno,
+            cupoEditable: String(turno.cupo_total),
+          })),
+        );
+      } catch (error) {
+        if (activo) {
+          setErrorCupos(
+            error instanceof Error
+              ? error.message
+              : "No se pudieron cargar los turnos.",
+          );
+        }
+      }
+    }
+
+    void cargarTurnosCupos();
+
+    return () => {
+      activo = false;
+    };
+  }, [temporadaGuardada]);
+
+  async function guardarDistribucion(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+
+    if (
+      temporadaGuardada === null ||
+      !turnosCupos?.length ||
+      guardandoCupos ||
+      guardandoConfiguracion ||
+      guardandoPeriodo ||
+      superaLimite
+    ) return;
+
+    setErrorCupos("");
+    setCuposGuardados(false);
+    setGuardandoCupos(true);
+
+    try {
+      await keycloak.updateToken(30);
+
+      if (!keycloak.token) {
+        throw new Error("Volvé a iniciar sesión.");
+      }
+
+      const respuesta = await fetch("/api/v1/admin/distribucion-cupos", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${keycloak.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          temporada: temporadaGuardada,
+          turnos: turnosCupos.map((turno) => ({
+            turno_id: turno.id,
+            cupo_total: Number(turno.cupoEditable),
+          })),
+        }),
+      });
+
+      if (!respuesta.ok) {
+        const problema = await respuesta.json().catch(() => null);
+
+        throw new Error(
+          problema?.errors?.[0]?.mensaje ??
+            problema?.detail ??
+            "No se pudo guardar la distribución.",
+        );
+      }
+
+      const turnos: Turno[] = await respuesta.json();
+
+      setTurnosCupos(
+        turnos.map((turno) => ({
+          ...turno,
+          cupoEditable: String(turno.cupo_total),
+        })),
+      );
+      setCuposGuardados(true);
+    } catch (error) {
+      setErrorCupos(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la distribución.",
+      );
+    } finally {
+      setGuardandoCupos(false);
+    }
+  }
+
   async function guardarConfiguracion(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
 
-    if (guardandoConfiguracion || guardandoPeriodo) return;
+    if (guardandoConfiguracion || guardandoPeriodo || guardandoCupos) return;
 
     setErrorConfiguracion("");
 
@@ -264,6 +392,7 @@ function AdministracionSistemaPage() {
 
       if (!respuesta.ok) {
         const problema = await respuesta.json().catch(() => null);
+
         throw new Error(
           problema?.errors?.[0]?.mensaje ??
             problema?.detail ??
@@ -285,7 +414,7 @@ function AdministracionSistemaPage() {
   async function manejarGuardadoPeriodo(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
 
-    if (guardandoPeriodo || guardandoConfiguracion) return;
+    if (guardandoPeriodo || guardandoConfiguracion || guardandoCupos) return;
 
     setErrorPeriodo("");
     setPeriodoGuardado(false);
@@ -368,7 +497,7 @@ function AdministracionSistemaPage() {
             <div>
               <p className="text-sm text-slate-500">Cupos previstos</p>
               <p className="text-2xl font-extrabold text-[#142D50]">
-                {configuracion.cuposPrevistos}
+                {totalGuardado ?? "—"}
               </p>
             </div>
           </article>
@@ -418,7 +547,8 @@ function AdministracionSistemaPage() {
               disabled={
                 temporadaGuardada === null ||
                 guardandoConfiguracion ||
-                guardandoPeriodo
+                guardandoPeriodo ||
+                guardandoCupos
               }
               className="grid grid-cols-1 gap-4 md:grid-cols-2"
             >
@@ -441,7 +571,7 @@ function AdministracionSistemaPage() {
                   Cupos totales previstos
                 </p>
                 <p className="mt-2 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
-                  {configuracion.cuposPrevistos}
+                  {totalGuardado ?? "—"}
                 </p>
               </div>
 
@@ -477,7 +607,8 @@ function AdministracionSistemaPage() {
               disabled={
                 temporadaGuardada === null ||
                 guardandoConfiguracion ||
-                guardandoPeriodo
+                guardandoPeriodo ||
+                guardandoCupos
               }
               className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -495,6 +626,122 @@ function AdministracionSistemaPage() {
           </form>
 
           <div className="mt-5 border-t border-slate-200 pt-5">
+            <h3 className="font-bold text-[#142D50]">Distribución de cupos</h3>
+
+            {turnosCupos === null && !errorCupos && !errorConfiguracion && (
+              <p role="status" className="mt-3 text-sm text-slate-600">
+                Cargando turnos…
+              </p>
+            )}
+
+            {turnosCupos?.length === 0 && (
+              <p className="mt-3 text-sm text-slate-600">
+                La temporada activa todavía no tiene turnos cargados.
+              </p>
+            )}
+
+            {turnosCupos && turnosCupos.length > 0 && (
+              <form onSubmit={guardarDistribucion} className="mt-4 space-y-4">
+                <fieldset
+                  disabled={guardandoCupos || guardandoConfiguracion || guardandoPeriodo}
+                  className="min-w-0"
+                >
+                  <div className="overflow-x-auto rounded-xl border border-slate-200">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50 text-slate-700">
+                        <tr>
+                          <th scope="col" className="px-3 py-2">Sede</th>
+                          <th scope="col" className="px-3 py-2">Período</th>
+                          <th scope="col" className="px-3 py-2">Turno</th>
+                          <th scope="col" className="px-3 py-2">Cupos</th>
+                        </tr>
+                      </thead>
+
+                      <tbody className="divide-y divide-slate-200">
+                        {turnosCupos.map((turno) => (
+                          <tr key={turno.id}>
+                            <td className="px-3 py-2">{turno.sede}</td>
+                            <td className="whitespace-nowrap px-3 py-2">
+                              {turno.fecha_desde.split("-").reverse().join("/")}
+                              {" al "}
+                              {turno.fecha_hasta.split("-").reverse().join("/")}
+                            </td>
+                            <td className="px-3 py-2">{turno.nombre}</td>
+                            <td className="px-3 py-2">
+                              <input
+                                aria-label={`Cupos para ${turno.sede}, ${turno.nombre}`}
+                                type="number"
+                                min={0}
+                                max={MAX_CUPOS_TEMPORADA}
+                                step={1}
+                                required
+                                value={turno.cupoEditable}
+                                onChange={(evento) => {
+                                  const cupoEditable = evento.target.value;
+                                  setCuposGuardados(false);
+                                  setErrorCupos("");
+                                  setTurnosCupos((actuales) =>
+                                    actuales?.map((actual) =>
+                                      actual.id === turno.id
+                                        ? { ...actual, cupoEditable }
+                                        : actual,
+                                    ) ?? null,
+                                  );
+                                }}
+                                className="w-24 rounded-lg border border-slate-300 px-2 py-1.5"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </fieldset>
+
+                <p
+                  className={`text-sm font-semibold ${
+                    superaLimite ? "text-red-700" : "text-slate-700"
+                  }`}
+                >
+                  {totalBorrador} de {MAX_CUPOS_TEMPORADA} cupos asignados
+                  {superaLimite && " · Supera el máximo de la temporada"}
+                </p>
+
+                <button
+                  type="submit"
+                  disabled={
+                    guardandoCupos ||
+                    guardandoConfiguracion ||
+                    guardandoPeriodo ||
+                    superaLimite
+                  }
+                  className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50"
+                >
+                  {guardandoCupos ? "Guardando…" : "Guardar distribución"}
+                </button>
+              </form>
+            )}
+
+            {errorCupos && (
+              <p
+                role="alert"
+                className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800"
+              >
+                {errorCupos}
+              </p>
+            )}
+
+            {cuposGuardados && (
+              <p
+                role="status"
+                className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"
+              >
+                Distribución guardada correctamente.
+              </p>
+            )}
+          </div>
+
+          <div className="mt-5 border-t border-slate-200 pt-5">
             <h3 className="font-bold text-[#142D50]">Período de inscripción</h3>
             <p className="mt-1 text-sm text-slate-600">Hora argentina.</p>
 
@@ -507,7 +754,7 @@ function AdministracionSistemaPage() {
             {periodo && (
               <form onSubmit={manejarGuardadoPeriodo} className="mt-4 space-y-4">
                 <fieldset
-                  disabled={guardandoPeriodo || guardandoConfiguracion}
+                  disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
                   onChange={() => {
                     setPeriodoGuardado(false);
                     setErrorPeriodo("");
@@ -539,7 +786,7 @@ function AdministracionSistemaPage() {
 
                 <button
                   type="submit"
-                  disabled={guardandoPeriodo || guardandoConfiguracion}
+                  disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
                   className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {guardandoPeriodo ? "Guardando…" : "Guardar período"}
@@ -641,11 +888,7 @@ function AdministracionSistemaPage() {
           >
             <div className="flex min-w-0 items-center gap-2">
               {estado ? (
-                <CheckCircle2
-                  size={19}
-                  className="shrink-0"
-                  aria-hidden="true"
-                />
+                <CheckCircle2 size={19} className="shrink-0" aria-hidden="true" />
               ) : (
                 <Info size={19} className="shrink-0" aria-hidden="true" />
               )}
@@ -730,7 +973,7 @@ function AdministracionSistemaPage() {
 
         <div className="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
           <Info size={20} className="shrink-0" />
-          <p>Los cupos previstos se muestran como referencia.</p>
+          <p>El total de cupos se calcula a partir de la distribución guardada.</p>
         </div>
       </div>
     </main>

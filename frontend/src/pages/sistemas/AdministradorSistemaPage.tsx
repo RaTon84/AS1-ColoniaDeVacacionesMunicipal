@@ -25,9 +25,15 @@ import {
 
 const configuracion = {
   cuposPrevistos: 600,
-  edadMinima: 6,
-  edadMaxima: 12,
 };
+
+const urlConfiguracion = "/api/v1/admin/configuracion-temporada";
+
+interface ConfiguracionTemporada {
+  temporada: number;
+  edad_minima: number;
+  edad_maxima: number;
+}
 
 const servicios = [
   {
@@ -92,6 +98,13 @@ function AdministracionSistemaPage() {
   const [guardandoPeriodo, setGuardandoPeriodo] = useState(false);
   const [errorPeriodo, setErrorPeriodo] = useState("");
   const [periodoGuardado, setPeriodoGuardado] = useState(false);
+
+  const [temporadaGuardada, setTemporadaGuardada] = useState<number | null>(null);
+  const [temporadaEditable, setTemporadaEditable] = useState("");
+  const [edadMinima, setEdadMinima] = useState("");
+  const [edadMaxima, setEdadMaxima] = useState("");
+  const [guardandoConfiguracion, setGuardandoConfiguracion] = useState(false);
+  const [errorConfiguracion, setErrorConfiguracion] = useState("");
 
   useEffect(() => {
     let activo = true;
@@ -169,10 +182,110 @@ function AdministracionSistemaPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let activo = true;
+
+    async function cargarConfiguracion() {
+      try {
+        await keycloak.updateToken(30);
+
+        if (!keycloak.token) {
+          throw new Error("Volvé a iniciar sesión.");
+        }
+
+        const respuesta = await fetch(urlConfiguracion, {
+          headers: { Authorization: `Bearer ${keycloak.token}` },
+          cache: "no-store",
+        });
+
+        if (!respuesta.ok) {
+          throw new Error("No se pudo cargar la configuración de la temporada.");
+        }
+
+        const datos: ConfiguracionTemporada = await respuesta.json();
+
+        if (activo) {
+          setTemporadaGuardada(datos.temporada);
+          setTemporadaEditable(String(datos.temporada));
+          setEdadMinima(String(datos.edad_minima));
+          setEdadMaxima(String(datos.edad_maxima));
+        }
+      } catch (error) {
+        if (activo) {
+          setErrorConfiguracion(
+            error instanceof Error
+              ? error.message
+              : "No se pudo cargar la configuración de la temporada.",
+          );
+        }
+      }
+    }
+
+    void cargarConfiguracion();
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  async function guardarConfiguracion(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+
+    if (guardandoConfiguracion || guardandoPeriodo) return;
+
+    setErrorConfiguracion("");
+
+    if (Number(edadMaxima) < Number(edadMinima)) {
+      setErrorConfiguracion("La edad máxima debe ser mayor o igual a la mínima.");
+      return;
+    }
+
+    setGuardandoConfiguracion(true);
+
+    try {
+      await keycloak.updateToken(30);
+
+      if (!keycloak.token) {
+        throw new Error("Volvé a iniciar sesión.");
+      }
+
+      const respuesta = await fetch(urlConfiguracion, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${keycloak.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          temporada: Number(temporadaEditable),
+          edad_minima: Number(edadMinima),
+          edad_maxima: Number(edadMaxima),
+        }),
+      });
+
+      if (!respuesta.ok) {
+        const problema = await respuesta.json().catch(() => null);
+        throw new Error(
+          problema?.errors?.[0]?.mensaje ??
+            problema?.detail ??
+            "No se pudo guardar la configuración.",
+        );
+      }
+
+      window.location.reload();
+    } catch (error) {
+      setErrorConfiguracion(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la configuración.",
+      );
+      setGuardandoConfiguracion(false);
+    }
+  }
+
   async function manejarGuardadoPeriodo(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
 
-    if (guardandoPeriodo) return;
+    if (guardandoPeriodo || guardandoConfiguracion) return;
 
     setErrorPeriodo("");
     setPeriodoGuardado(false);
@@ -242,7 +355,7 @@ function AdministracionSistemaPage() {
             <div>
               <p className="text-sm text-slate-500">Temporada</p>
               <p className="text-2xl font-extrabold text-[#142D50]">
-                {periodo?.temporada ?? "—"}
+                {temporadaGuardada ?? periodo?.temporada ?? "—"}
               </p>
             </div>
           </article>
@@ -294,58 +407,92 @@ function AdministracionSistemaPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div>
-              <label
-                htmlFor="temporada-sistema"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
+          {temporadaGuardada === null && !errorConfiguracion && (
+            <p role="status" className="mb-4 text-sm text-slate-600">
+              Cargando la configuración de la temporada…
+            </p>
+          )}
+
+          <form onSubmit={guardarConfiguracion} className="space-y-4">
+            <fieldset
+              disabled={
+                temporadaGuardada === null ||
+                guardandoConfiguracion ||
+                guardandoPeriodo
+              }
+              className="grid grid-cols-1 gap-4 md:grid-cols-2"
+            >
+              <label className="text-sm font-semibold text-slate-700">
                 Temporada
+                <input
+                  id="temporada-sistema"
+                  type="number"
+                  min={1}
+                  max={9999}
+                  required
+                  value={temporadaEditable}
+                  onChange={(evento) => setTemporadaEditable(evento.target.value)}
+                  className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                />
               </label>
 
-              <input
-                id="temporada-sistema"
-                type="number"
-                value={periodo?.temporada ?? ""}
-                readOnly
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-              />
-            </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-700">
+                  Cupos totales previstos
+                </p>
+                <p className="mt-2 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                  {configuracion.cuposPrevistos}
+                </p>
+              </div>
 
-            <div>
-              <label
-                htmlFor="cupos-sistema"
-                className="mb-2 block text-sm font-semibold text-slate-700"
+              <label className="text-sm font-semibold text-slate-700">
+                Edad mínima
+                <input
+                  id="edad-minima-sistema"
+                  type="number"
+                  min={0}
+                  required
+                  value={edadMinima}
+                  onChange={(evento) => setEdadMinima(evento.target.value)}
+                  className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                />
+              </label>
+
+              <label className="text-sm font-semibold text-slate-700">
+                Edad máxima
+                <input
+                  id="edad-maxima-sistema"
+                  type="number"
+                  min={0}
+                  required
+                  value={edadMaxima}
+                  onChange={(evento) => setEdadMaxima(evento.target.value)}
+                  className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                />
+              </label>
+            </fieldset>
+
+            <button
+              type="submit"
+              disabled={
+                temporadaGuardada === null ||
+                guardandoConfiguracion ||
+                guardandoPeriodo
+              }
+              className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {guardandoConfiguracion ? "Guardando…" : "Guardar configuración"}
+            </button>
+
+            {errorConfiguracion && (
+              <p
+                role="alert"
+                className="rounded-xl bg-red-50 p-3 text-sm text-red-800"
               >
-                Cupos totales previstos
-              </label>
-
-              <input
-                id="cupos-sistema"
-                type="number"
-                value={configuracion.cuposPrevistos}
-                readOnly
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="edades-sistema"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Rango de edades
-              </label>
-
-              <input
-                id="edades-sistema"
-                type="text"
-                value={`${configuracion.edadMinima} a ${configuracion.edadMaxima} años`}
-                readOnly
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-              />
-            </div>
-          </div>
+                {errorConfiguracion}
+              </p>
+            )}
+          </form>
 
           <div className="mt-5 border-t border-slate-200 pt-5">
             <h3 className="font-bold text-[#142D50]">Período de inscripción</h3>
@@ -360,7 +507,7 @@ function AdministracionSistemaPage() {
             {periodo && (
               <form onSubmit={manejarGuardadoPeriodo} className="mt-4 space-y-4">
                 <fieldset
-                  disabled={guardandoPeriodo}
+                  disabled={guardandoPeriodo || guardandoConfiguracion}
                   onChange={() => {
                     setPeriodoGuardado(false);
                     setErrorPeriodo("");
@@ -392,7 +539,7 @@ function AdministracionSistemaPage() {
 
                 <button
                   type="submit"
-                  disabled={guardandoPeriodo}
+                  disabled={guardandoPeriodo || guardandoConfiguracion}
                   className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {guardandoPeriodo ? "Guardando…" : "Guardar período"}
@@ -583,7 +730,7 @@ function AdministracionSistemaPage() {
 
         <div className="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
           <Info size={20} className="shrink-0" />
-          <p>Los cupos previstos y el rango de edades se muestran como referencia.</p>
+          <p>Los cupos previstos se muestran como referencia.</p>
         </div>
       </div>
     </main>

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Settings2,
   CalendarDays,
@@ -13,67 +14,118 @@ import {
   ClipboardList,
   UserCog,
   CalendarCog,
-} from 'lucide-react'
+} from "lucide-react";
+import keycloak from "../../auth/keycloak";
+import { obtenerEstadoSistema } from "../../services/sistema";
 
 const configuracion = {
   temporada: 2027,
   cuposPrevistos: 600,
-  periodoInscripcion: '3 semanas',
+  periodoInscripcion: "3 semanas",
   edadMinima: 6,
   edadMaxima: 12,
-}
+};
 
 const servicios = [
   {
-    nombre: 'API FastAPI',
-    descripcion: 'Lógica de negocio e inscripciones',
+    id: "api",
+    nombre: "API FastAPI",
+    descripcion: "Lógica de negocio e inscripciones",
     icono: Server,
   },
   {
-    nombre: 'PostgreSQL',
-    descripcion: 'Persistencia de datos',
+    id: "database",
+    nombre: "PostgreSQL",
+    descripcion: "Persistencia de datos",
     icono: Database,
   },
   {
-    nombre: 'Keycloak',
-    descripcion: 'Autenticación y roles de usuarios',
+    id: "keycloak",
+    nombre: "Keycloak",
+    descripcion: "Autenticación y roles de usuarios",
     icono: KeyRound,
   },
   {
-    nombre: 'Padrón municipal',
-    descripcion: 'Verificación de residencia mediante WireMock',
+    id: "padron",
+    nombre: "Padrón municipal",
+    descripcion: "Verificación de residencia mediante WireMock",
     icono: ShieldCheck,
   },
-]
+] as const;
 
 const perfiles = [
   {
-    nombre: 'Tutor',
-    descripcion: 'Realiza inscripciones y consulta sus solicitudes.',
+    nombre: "Tutor",
+    descripcion: "Realiza inscripciones y consulta sus solicitudes.",
     icono: UsersRound,
-    color: 'bg-blue-100 text-blue-700',
+    color: "bg-blue-100 text-blue-700",
   },
   {
-    nombre: 'Administrativo',
+    nombre: "Administrativo",
     descripcion:
-      'Consulta inscripciones y atiende las solicitudes que requieren revisión.',
+      "Consulta inscripciones y atiende las solicitudes que requieren revisión.",
     icono: ClipboardList,
-    color: 'bg-emerald-100 text-emerald-700',
+    color: "bg-emerald-100 text-emerald-700",
   },
   {
-    nombre: 'Administrador de Sistemas',
+    nombre: "Administrador de Sistemas",
     descripcion:
-      'Supervisa la aplicación y administra la configuración técnica autorizada.',
+      "Supervisa la aplicación y administra la configuración técnica autorizada.",
     icono: UserCog,
-    color: 'bg-violet-100 text-violet-700',
+    color: "bg-violet-100 text-violet-700",
   },
-]
+];
 
 function AdministracionSistemaPage() {
+  const [estado, setEstado] = useState<Awaited<
+    ReturnType<typeof obtenerEstadoSistema>
+  > | null>(null);
+  const [errorEstado, setErrorEstado] = useState(false);
+  const [comprobacion, setComprobacion] = useState(0);
+
+  useEffect(() => {
+    let activo = true;
+    let temporizador: number | undefined;
+
+    async function cargarEstado() {
+      try {
+        if (!keycloak.token || keycloak.isTokenExpired()) {
+          await keycloak.updateToken(30);
+        }
+
+        if (!keycloak.token) {
+          throw new Error("No hay una sesión activa.");
+        }
+
+        const datos = await obtenerEstadoSistema(keycloak.token);
+
+        if (activo) {
+          setEstado(datos);
+          setErrorEstado(false);
+        }
+      } catch {
+        if (activo) {
+          setEstado(null);
+          setErrorEstado(true);
+        }
+      } finally {
+        if (activo) {
+          temporizador = window.setTimeout(cargarEstado, 30_000);
+        }
+      }
+    }
+
+    void cargarEstado();
+
+    return () => {
+      activo = false;
+      window.clearTimeout(temporizador);
+    };
+  }, [comprobacion]);
+
   return (
     <main className="min-h-screen bg-transparent px-5 py-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
-
         <header className="mb-7">
           <div className="mb-3 flex items-center gap-3">
             <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
@@ -96,16 +148,13 @@ function AdministracionSistemaPage() {
           aria-label="Resumen de configuración"
           className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
         >
-
           <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
             <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
               <CalendarDays size={28} />
             </div>
 
             <div>
-              <p className="text-sm text-slate-500">
-                Temporada de ejemplo
-              </p>
+              <p className="text-sm text-slate-500">Temporada de ejemplo</p>
 
               <p className="text-2xl font-extrabold text-[#142D50]">
                 {configuracion.temporada}
@@ -119,9 +168,7 @@ function AdministracionSistemaPage() {
             </div>
 
             <div>
-              <p className="text-sm text-slate-500">
-                Cupos previstos
-              </p>
+              <p className="text-sm text-slate-500">Cupos previstos</p>
 
               <p className="text-2xl font-extrabold text-[#142D50]">
                 {configuracion.cuposPrevistos}
@@ -135,20 +182,16 @@ function AdministracionSistemaPage() {
             </div>
 
             <div>
-              <p className="text-sm text-slate-500">
-                Período de inscripción
-              </p>
+              <p className="text-sm text-slate-500">Período de inscripción</p>
 
               <p className="text-2xl font-extrabold text-[#142D50]">
                 {configuracion.periodoInscripcion}
               </p>
             </div>
           </article>
-
         </section>
 
         <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
               <CalendarCog size={25} />
@@ -166,7 +209,6 @@ function AdministracionSistemaPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
             <div>
               <label
                 htmlFor="temporada-sistema"
@@ -234,22 +276,19 @@ function AdministracionSistemaPage() {
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
               />
             </div>
-
           </div>
 
           <div className="mt-5 flex items-start gap-2 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
             <Info size={19} className="shrink-0" />
             <p>
-              Esta sección es de solo lectura por ahora.
-              La edición de parámetros se habilitará únicamente
-              si el backend incorpora operaciones de configuración.
+              Esta sección es de solo lectura por ahora. La edición de
+              parámetros se habilitará únicamente si el backend incorpora
+              operaciones de configuración.
             </p>
           </div>
-
         </section>
 
         <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-xl bg-cyan-100 p-3 text-cyan-700">
               <Activity size={25} />
@@ -267,17 +306,16 @@ function AdministracionSistemaPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-
             {servicios.map((servicio) => {
-              const Icono = servicio.icono
+              const Icono = servicio.icono;
+              const resultado = estado?.services[servicio.id];
 
               return (
                 <article
                   key={servicio.nombre}
                   className="rounded-xl border border-slate-200 p-5"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-
+                  <div className="flex flex-col items-start gap-3">
                     <div className="flex items-start gap-3">
                       <div className="rounded-xl bg-slate-100 p-3 text-slate-600">
                         <Icono size={24} />
@@ -294,31 +332,72 @@ function AdministracionSistemaPage() {
                       </div>
                     </div>
 
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                      Sin verificar
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        resultado === "ok"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : resultado === "error"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {resultado === "ok"
+                        ? "Operativo"
+                        : resultado === "error"
+                          ? "Con fallas"
+                          : "Sin verificar"}
                     </span>
-
                   </div>
                 </article>
-              )
+              );
             })}
-
           </div>
 
-          <div className="mt-5 flex items-start gap-2 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-            <Info size={19} className="shrink-0" />
+          <div
+            className={`mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl p-4 ${
+              errorEstado
+                ? "bg-red-50 text-red-800"
+                : estado
+                  ? "bg-emerald-50 text-emerald-800"
+                  : "bg-blue-50 text-blue-800"
+            }`}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              {estado ? (
+                <CheckCircle2
+                  size={19}
+                  className="shrink-0"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Info size={19} className="shrink-0" aria-hidden="true" />
+              )}
 
-            <p>
-              El estado de los servicios todavía no se consulta
-              automáticamente. Más adelante integraremos los
-              mecanismos de supervisión disponibles.
-            </p>
+              <p role="status" className="text-sm font-semibold">
+                {errorEstado
+                  ? "Estado sin actualizar. No se pudo verificar la conexión con el sistema.."
+                  : estado
+                    ? "Estado actualizado"
+                    : "Consultando el estado de los servicios…"}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={!estado && !errorEstado}
+              onClick={() => {
+                setEstado(null);
+                setErrorEstado(false);
+                setComprobacion((anterior) => anterior + 1);
+              }}
+              className="ml-auto shrink-0 rounded-lg bg-blue-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Actualizar
+            </button>
           </div>
-
         </section>
 
         <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-xl bg-violet-100 p-3 text-violet-700">
               <ShieldCheck size={25} />
@@ -337,7 +416,7 @@ function AdministracionSistemaPage() {
 
           <div className="space-y-3">
             {perfiles.map((perfil) => {
-              const Icono = perfil.icono
+              const Icono = perfil.icono;
 
               return (
                 <article
@@ -364,30 +443,24 @@ function AdministracionSistemaPage() {
                     aria-hidden="true"
                   />
                 </article>
-              )
+              );
             })}
           </div>
 
           <p className="mt-5 text-sm text-slate-500">
-            La autenticación y asignación real de roles
-            se integrará mediante Keycloak.
+            La autenticación y asignación real de roles se integrará mediante
+            Keycloak.
           </p>
-
         </section>
 
         <div className="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
           <Info size={20} className="shrink-0" />
 
-          <p>
-            Esta es una versión visual del panel de Sistemas.
-            La configuración mostrada es ilustrativa y
-            todavía no se realizan operaciones sobre el backend.
-          </p>
+          <p>Los datos de configuración de la temporada son ilustrativos.</p>
         </div>
-
       </div>
     </main>
-  )
+  );
 }
 
-export default AdministracionSistemaPage
+export default AdministracionSistemaPage;

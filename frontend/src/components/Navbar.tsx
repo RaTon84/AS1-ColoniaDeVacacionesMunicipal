@@ -6,7 +6,9 @@ import {
   ClipboardList,
   FileText,
   Files,
-  Settings,
+  CalendarCog,
+  Activity,
+  UsersRound,
   Waves,
   Sun,
   Menu,
@@ -55,9 +57,21 @@ function Navbar() {
       roles: ['administrativo'],
     },
     {
-      nombre: 'Administración del sistema',
+      nombre: 'Configuración de temporada',
       ruta: '/sistemas',
-      icono: Settings,
+      icono: CalendarCog,
+      roles: ['administrador_sistema'],
+    },
+    {
+      nombre: 'Estado del sistema',
+      ruta: '/sistemas/estado',
+      icono: Activity,
+      roles: ['administrador_sistema'],
+    },
+    {
+      nombre: 'Perfiles',
+      ruta: '/sistemas/perfiles',
+      icono: UsersRound,
       roles: ['administrador_sistema'],
     },
   ]
@@ -134,7 +148,7 @@ function Navbar() {
               <NavLink
                 key={opcion.ruta}
                 to={opcion.ruta}
-                end={opcion.ruta === '/'}
+                end={opcion.ruta === '/' || opcion.ruta === '/sistemas'}
                 className={({ isActive }) =>
                   `flex items-center gap-2 rounded-xl px-3 py-3 text-sm whitespace-nowrap transition-colors ${
                     isActive
@@ -231,13 +245,13 @@ function Navbar() {
                 <NavLink
                   key={opcion.ruta}
                   to={opcion.ruta}
-                  end={opcion.ruta === '/'}
+                  end={opcion.ruta === '/' || opcion.ruta === '/sistemas'}
                   onClick={() => setMenuAbierto(false)}
                   className={({ isActive }) =>
                     `flex items-center gap-3 rounded-xl px-4 py-3 text-sm ${
                       isActive
                         ? 'bg-[#2B6C9A] font-semibold text-white'
-                        : 'text-slate-200 hover:bg-white/10'
+                        : 'text-slate-200 hover:bg-white/10 hover:text-white'
                     }`
                   }
                 >

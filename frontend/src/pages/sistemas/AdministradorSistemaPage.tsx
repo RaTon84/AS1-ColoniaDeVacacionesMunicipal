@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useMatch } from "react-router-dom";
 import {
   Settings2,
   CalendarDays,
@@ -87,6 +88,10 @@ const perfiles = [
 ];
 
 function AdministracionSistemaPage() {
+  const mostrarEstado = Boolean(useMatch("/sistemas/estado"));
+  const mostrarPerfiles = Boolean(useMatch("/sistemas/perfiles"));
+  const mostrarConfiguracion = !mostrarEstado && !mostrarPerfiles;
+
   const [estado, setEstado] = useState<Awaited<
     ReturnType<typeof obtenerEstadoSistema>
   > | null>(null);
@@ -472,349 +477,359 @@ function AdministracionSistemaPage() {
           </div>
         </header>
 
-        <section
-          aria-label="Resumen de configuración"
-          className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-        >
-          <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-            <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
-              <CalendarDays size={28} />
-            </div>
-
-            <div>
-              <p className="text-sm text-slate-500">Temporada</p>
-              <p className="text-2xl font-extrabold text-[#142D50]">
-                {temporadaGuardada ?? periodo?.temporada ?? "—"}
-              </p>
-            </div>
-          </article>
-
-          <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-            <div className="rounded-xl bg-emerald-100 p-3 text-emerald-700">
-              <UsersRound size={28} />
-            </div>
-
-            <div>
-              <p className="text-sm text-slate-500">Cupos previstos</p>
-              <p className="text-2xl font-extrabold text-[#142D50]">
-                {totalGuardado ?? "—"}
-              </p>
-            </div>
-          </article>
-
-          <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-            <div className="rounded-xl bg-amber-100 p-3 text-amber-700">
-              <Clock3 size={28} />
-            </div>
-
-            <div>
-              <p className="text-sm text-slate-500">Período de inscripción</p>
-              <p className="text-2xl font-extrabold text-[#142D50]">
-                {periodo
-                  ? periodo.apertura && periodo.cierre
-                    ? "Configurado"
-                    : "Sin configurar"
-                  : "—"}
-              </p>
-            </div>
-          </article>
-        </section>
-
-        <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
-              <CalendarCog size={25} />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold text-[#142D50]">
-                Configuración de la temporada
-              </h2>
-              <p className="text-sm text-slate-500">
-                Parámetros previstos para el funcionamiento de la colonia.
-              </p>
-            </div>
-          </div>
-
-          {temporadaGuardada === null && !errorConfiguracion && (
-            <p role="status" className="mb-4 text-sm text-slate-600">
-              Cargando la configuración de la temporada…
-            </p>
-          )}
-
-          <form onSubmit={guardarConfiguracion} className="space-y-4">
-            <fieldset
-              disabled={
-                temporadaGuardada === null ||
-                guardandoConfiguracion ||
-                guardandoPeriodo ||
-                guardandoCupos
-              }
-              className="grid grid-cols-1 gap-4 md:grid-cols-2"
-            >
-              <label className="text-sm font-semibold text-slate-700">
-                Temporada
-                <input
-                  id="temporada-sistema"
-                  type="number"
-                  min={1}
-                  max={9999}
-                  required
-                  value={temporadaEditable}
-                  onChange={(evento) => setTemporadaEditable(evento.target.value)}
-                  className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
-                />
-              </label>
+        <div hidden={!mostrarConfiguracion}>
+          <section
+            aria-label="Resumen de configuración"
+            className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
+              <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
+                <CalendarDays size={28} />
+              </div>
 
               <div>
-                <p className="text-sm font-semibold text-slate-700">
-                  Cupos totales previstos
+                <p className="text-sm text-slate-500">Temporada</p>
+                <p className="text-2xl font-extrabold text-[#142D50]">
+                  {temporadaGuardada ?? periodo?.temporada ?? "—"}
                 </p>
-                <p className="mt-2 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              </div>
+            </article>
+
+            <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
+              <div className="rounded-xl bg-emerald-100 p-3 text-emerald-700">
+                <UsersRound size={28} />
+              </div>
+
+              <div>
+                <p className="text-sm text-slate-500">Cupos previstos</p>
+                <p className="text-2xl font-extrabold text-[#142D50]">
                   {totalGuardado ?? "—"}
                 </p>
               </div>
+            </article>
 
-              <label className="text-sm font-semibold text-slate-700">
-                Edad mínima
-                <input
-                  id="edad-minima-sistema"
-                  type="number"
-                  min={0}
-                  required
-                  value={edadMinima}
-                  onChange={(evento) => setEdadMinima(evento.target.value)}
-                  className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
-                />
-              </label>
+            <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
+              <div className="rounded-xl bg-amber-100 p-3 text-amber-700">
+                <Clock3 size={28} />
+              </div>
 
-              <label className="text-sm font-semibold text-slate-700">
-                Edad máxima
-                <input
-                  id="edad-maxima-sistema"
-                  type="number"
-                  min={0}
-                  required
-                  value={edadMaxima}
-                  onChange={(evento) => setEdadMaxima(evento.target.value)}
-                  className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
-                />
-              </label>
-            </fieldset>
-
-            <button
-              type="submit"
-              disabled={
-                temporadaGuardada === null ||
-                guardandoConfiguracion ||
-                guardandoPeriodo ||
-                guardandoCupos
-              }
-              className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {guardandoConfiguracion ? "Guardando…" : "Guardar configuración"}
-            </button>
-
-            {errorConfiguracion && (
-              <p
-                role="alert"
-                className="rounded-xl bg-red-50 p-3 text-sm text-red-800"
-              >
-                {errorConfiguracion}
-              </p>
-            )}
-          </form>
-
-          <div className="mt-5 border-t border-slate-200 pt-5">
-            <h3 className="font-bold text-[#142D50]">Distribución de cupos</h3>
-
-            {turnosCupos === null && !errorCupos && !errorConfiguracion && (
-              <p role="status" className="mt-3 text-sm text-slate-600">
-                Cargando turnos…
-              </p>
-            )}
-
-            {turnosCupos?.length === 0 && (
-              <p className="mt-3 text-sm text-slate-600">
-                La temporada activa todavía no tiene turnos cargados.
-              </p>
-            )}
-
-            {turnosCupos && turnosCupos.length > 0 && (
-              <form onSubmit={guardarDistribucion} className="mt-4 space-y-4">
-                <fieldset
-                  disabled={guardandoCupos || guardandoConfiguracion || guardandoPeriodo}
-                  className="min-w-0"
-                >
-                  <div className="overflow-x-auto rounded-xl border border-slate-200">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50 text-slate-700">
-                        <tr>
-                          <th scope="col" className="px-3 py-2">Sede</th>
-                          <th scope="col" className="px-3 py-2">Período</th>
-                          <th scope="col" className="px-3 py-2">Turno</th>
-                          <th scope="col" className="px-3 py-2">Cupos</th>
-                        </tr>
-                      </thead>
-
-                      <tbody className="divide-y divide-slate-200">
-                        {turnosCupos.map((turno) => (
-                          <tr key={turno.id}>
-                            <td className="px-3 py-2">{turno.sede}</td>
-                            <td className="whitespace-nowrap px-3 py-2">
-                              {turno.fecha_desde.split("-").reverse().join("/")}
-                              {" al "}
-                              {turno.fecha_hasta.split("-").reverse().join("/")}
-                            </td>
-                            <td className="px-3 py-2">{turno.nombre}</td>
-                            <td className="px-3 py-2">
-                              <input
-                                aria-label={`Cupos para ${turno.sede}, ${turno.nombre}`}
-                                type="number"
-                                min={0}
-                                max={MAX_CUPOS_TEMPORADA}
-                                step={1}
-                                required
-                                value={turno.cupoEditable}
-                                onChange={(evento) => {
-                                  const cupoEditable = evento.target.value;
-                                  setCuposGuardados(false);
-                                  setErrorCupos("");
-                                  setTurnosCupos((actuales) =>
-                                    actuales?.map((actual) =>
-                                      actual.id === turno.id
-                                        ? { ...actual, cupoEditable }
-                                        : actual,
-                                    ) ?? null,
-                                  );
-                                }}
-                                className="w-24 rounded-lg border border-slate-300 px-2 py-1.5"
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </fieldset>
-
-                <p
-                  className={`text-sm font-semibold ${
-                    superaLimite ? "text-red-700" : "text-slate-700"
-                  }`}
-                >
-                  {totalBorrador} de {MAX_CUPOS_TEMPORADA} cupos asignados
-                  {superaLimite && " · Supera el máximo de la temporada"}
+              <div>
+                <p className="text-sm text-slate-500">Período de inscripción</p>
+                <p className="text-2xl font-extrabold text-[#142D50]">
+                  {periodo
+                    ? periodo.apertura && periodo.cierre
+                      ? "Configurado"
+                      : "Sin configurar"
+                    : "—"}
                 </p>
+              </div>
+            </article>
+          </section>
 
-                <button
-                  type="submit"
-                  disabled={
-                    guardandoCupos ||
-                    guardandoConfiguracion ||
-                    guardandoPeriodo ||
-                    superaLimite
-                  }
-                  className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50"
+          <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
+                <CalendarCog size={25} />
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-[#142D50]">
+                  Configuración de la temporada
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Parámetros previstos para el funcionamiento de la colonia.
+                </p>
+              </div>
+            </div>
+
+            {temporadaGuardada === null && !errorConfiguracion && (
+              <p role="status" className="mb-4 text-sm text-slate-600">
+                Cargando la configuración de la temporada…
+              </p>
+            )}
+
+            <form onSubmit={guardarConfiguracion} className="space-y-4">
+              <fieldset
+                disabled={
+                  temporadaGuardada === null ||
+                  guardandoConfiguracion ||
+                  guardandoPeriodo ||
+                  guardandoCupos
+                }
+                className="grid grid-cols-1 gap-4 md:grid-cols-2"
+              >
+                <label className="text-sm font-semibold text-slate-700">
+                  Temporada
+                  <input
+                    id="temporada-sistema"
+                    type="number"
+                    min={1}
+                    max={9999}
+                    required
+                    value={temporadaEditable}
+                    onChange={(evento) => setTemporadaEditable(evento.target.value)}
+                    className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                  />
+                </label>
+
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">
+                    Cupos totales previstos
+                  </p>
+                  <p className="mt-2 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                    {totalGuardado ?? "—"}
+                  </p>
+                </div>
+
+                <label className="text-sm font-semibold text-slate-700">
+                  Edad mínima
+                  <input
+                    id="edad-minima-sistema"
+                    type="number"
+                    min={0}
+                    required
+                    value={edadMinima}
+                    onChange={(evento) => setEdadMinima(evento.target.value)}
+                    className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                  />
+                </label>
+
+                <label className="text-sm font-semibold text-slate-700">
+                  Edad máxima
+                  <input
+                    id="edad-maxima-sistema"
+                    type="number"
+                    min={0}
+                    required
+                    value={edadMaxima}
+                    onChange={(evento) => setEdadMaxima(evento.target.value)}
+                    className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                  />
+                </label>
+              </fieldset>
+
+              <button
+                type="submit"
+                disabled={
+                  temporadaGuardada === null ||
+                  guardandoConfiguracion ||
+                  guardandoPeriodo ||
+                  guardandoCupos
+                }
+                className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {guardandoConfiguracion ? "Guardando…" : "Guardar configuración"}
+              </button>
+
+              {errorConfiguracion && (
+                <p
+                  role="alert"
+                  className="rounded-xl bg-red-50 p-3 text-sm text-red-800"
                 >
-                  {guardandoCupos ? "Guardando…" : "Guardar distribución"}
-                </button>
-              </form>
-            )}
+                  {errorConfiguracion}
+                </p>
+              )}
+            </form>
 
-            {errorCupos && (
-              <p
-                role="alert"
-                className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800"
-              >
-                {errorCupos}
-              </p>
-            )}
+            <div className="mt-5 border-t border-slate-200 pt-5">
+              <h3 className="font-bold text-[#142D50]">Distribución de cupos</h3>
 
-            {cuposGuardados && (
-              <p
-                role="status"
-                className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"
-              >
-                Distribución guardada correctamente.
-              </p>
-            )}
+              {turnosCupos === null && !errorCupos && !errorConfiguracion && (
+                <p role="status" className="mt-3 text-sm text-slate-600">
+                  Cargando turnos…
+                </p>
+              )}
+
+              {turnosCupos?.length === 0 && (
+                <p className="mt-3 text-sm text-slate-600">
+                  La temporada activa todavía no tiene turnos cargados.
+                </p>
+              )}
+
+              {turnosCupos && turnosCupos.length > 0 && (
+                <form onSubmit={guardarDistribucion} className="mt-4 space-y-4">
+                  <fieldset
+                    disabled={guardandoCupos || guardandoConfiguracion || guardandoPeriodo}
+                    className="min-w-0"
+                  >
+                    <div className="overflow-x-auto rounded-xl border border-slate-200">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-50 text-slate-700">
+                          <tr>
+                            <th scope="col" className="px-3 py-2">Sede</th>
+                            <th scope="col" className="px-3 py-2">Período</th>
+                            <th scope="col" className="px-3 py-2">Turno</th>
+                            <th scope="col" className="px-3 py-2">Cupos</th>
+                          </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-slate-200">
+                          {turnosCupos.map((turno) => (
+                            <tr key={turno.id}>
+                              <td className="px-3 py-2">{turno.sede}</td>
+                              <td className="whitespace-nowrap px-3 py-2">
+                                {turno.fecha_desde.split("-").reverse().join("/")}
+                                {" al "}
+                                {turno.fecha_hasta.split("-").reverse().join("/")}
+                              </td>
+                              <td className="px-3 py-2">{turno.nombre}</td>
+                              <td className="px-3 py-2">
+                                <input
+                                  aria-label={`Cupos para ${turno.sede}, ${turno.nombre}`}
+                                  type="number"
+                                  min={0}
+                                  max={MAX_CUPOS_TEMPORADA}
+                                  step={1}
+                                  required
+                                  value={turno.cupoEditable}
+                                  onChange={(evento) => {
+                                    const cupoEditable = evento.target.value;
+                                    setCuposGuardados(false);
+                                    setErrorCupos("");
+                                    setTurnosCupos((actuales) =>
+                                      actuales?.map((actual) =>
+                                        actual.id === turno.id
+                                          ? { ...actual, cupoEditable }
+                                          : actual,
+                                      ) ?? null,
+                                    );
+                                  }}
+                                  className="w-24 rounded-lg border border-slate-300 px-2 py-1.5"
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </fieldset>
+
+                  <p
+                    className={`text-sm font-semibold ${
+                      superaLimite ? "text-red-700" : "text-slate-700"
+                    }`}
+                  >
+                    {totalBorrador} de {MAX_CUPOS_TEMPORADA} cupos asignados
+                    {superaLimite && " · Supera el máximo de la temporada"}
+                  </p>
+
+                  <button
+                    type="submit"
+                    disabled={
+                      guardandoCupos ||
+                      guardandoConfiguracion ||
+                      guardandoPeriodo ||
+                      superaLimite
+                    }
+                    className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50"
+                  >
+                    {guardandoCupos ? "Guardando…" : "Guardar distribución"}
+                  </button>
+                </form>
+              )}
+
+              {errorCupos && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800"
+                >
+                  {errorCupos}
+                </p>
+              )}
+
+              {cuposGuardados && (
+                <p
+                  role="status"
+                  className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"
+                >
+                  Distribución guardada correctamente.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 border-t border-slate-200 pt-5">
+              <h3 className="font-bold text-[#142D50]">Período de inscripción</h3>
+              <p className="mt-1 text-sm text-slate-600">Hora argentina.</p>
+
+              {!periodo && !errorPeriodo && (
+                <p role="status" className="mt-3 text-sm text-slate-600">
+                  Cargando el período de inscripción…
+                </p>
+              )}
+
+              {periodo && (
+                <form onSubmit={manejarGuardadoPeriodo} className="mt-4 space-y-4">
+                  <fieldset
+                    disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
+                    onChange={() => {
+                      setPeriodoGuardado(false);
+                      setErrorPeriodo("");
+                    }}
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                  >
+                    <label className="min-w-0 text-sm font-semibold text-slate-700">
+                      Apertura
+                      <input
+                        type="datetime-local"
+                        required
+                        value={apertura}
+                        onChange={(evento) => setApertura(evento.target.value)}
+                        className="mt-2 block w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2"
+                      />
+                    </label>
+
+                    <label className="min-w-0 text-sm font-semibold text-slate-700">
+                      Cierre
+                      <input
+                        type="datetime-local"
+                        required
+                        value={cierre}
+                        onChange={(evento) => setCierre(evento.target.value)}
+                        className="mt-2 block w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2"
+                      />
+                    </label>
+                  </fieldset>
+
+                  <button
+                    type="submit"
+                    disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
+                    className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {guardandoPeriodo ? "Guardando…" : "Guardar período"}
+                  </button>
+                </form>
+              )}
+
+              {errorPeriodo && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800"
+                >
+                  {errorPeriodo}
+                </p>
+              )}
+
+              {periodoGuardado && (
+                <p
+                  role="status"
+                  className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"
+                >
+                  Período guardado correctamente.
+                </p>
+              )}
+            </div>
+          </section>
+
+          <div className="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
+            <Info size={20} className="shrink-0" />
+            <p>El total de cupos se calcula a partir de la distribución guardada.</p>
           </div>
+        </div>
 
-          <div className="mt-5 border-t border-slate-200 pt-5">
-            <h3 className="font-bold text-[#142D50]">Período de inscripción</h3>
-            <p className="mt-1 text-sm text-slate-600">Hora argentina.</p>
-
-            {!periodo && !errorPeriodo && (
-              <p role="status" className="mt-3 text-sm text-slate-600">
-                Cargando el período de inscripción…
-              </p>
-            )}
-
-            {periodo && (
-              <form onSubmit={manejarGuardadoPeriodo} className="mt-4 space-y-4">
-                <fieldset
-                  disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
-                  onChange={() => {
-                    setPeriodoGuardado(false);
-                    setErrorPeriodo("");
-                  }}
-                  className="grid grid-cols-1 gap-4 md:grid-cols-2"
-                >
-                  <label className="min-w-0 text-sm font-semibold text-slate-700">
-                    Apertura
-                    <input
-                      type="datetime-local"
-                      required
-                      value={apertura}
-                      onChange={(evento) => setApertura(evento.target.value)}
-                      className="mt-2 block w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2"
-                    />
-                  </label>
-
-                  <label className="min-w-0 text-sm font-semibold text-slate-700">
-                    Cierre
-                    <input
-                      type="datetime-local"
-                      required
-                      value={cierre}
-                      onChange={(evento) => setCierre(evento.target.value)}
-                      className="mt-2 block w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2"
-                    />
-                  </label>
-                </fieldset>
-
-                <button
-                  type="submit"
-                  disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
-                  className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {guardandoPeriodo ? "Guardando…" : "Guardar período"}
-                </button>
-              </form>
-            )}
-
-            {errorPeriodo && (
-              <p
-                role="alert"
-                className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800"
-              >
-                {errorPeriodo}
-              </p>
-            )}
-
-            {periodoGuardado && (
-              <p
-                role="status"
-                className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"
-              >
-                Período guardado correctamente.
-              </p>
-            )}
-          </div>
-        </section>
-
-        <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+        <section
+          hidden={!mostrarEstado}
+          className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6"
+        >
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-xl bg-cyan-100 p-3 text-cyan-700">
               <Activity size={25} />
@@ -917,7 +932,10 @@ function AdministracionSistemaPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+        <section
+          hidden={!mostrarPerfiles}
+          className="rounded-2xl bg-white p-5 shadow-sm sm:p-6"
+        >
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-xl bg-violet-100 p-3 text-violet-700">
               <ShieldCheck size={25} />
@@ -970,11 +988,6 @@ function AdministracionSistemaPage() {
             Keycloak.
           </p>
         </section>
-
-        <div className="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-          <Info size={20} className="shrink-0" />
-          <p>El total de cupos se calcula a partir de la distribución guardada.</p>
-        </div>
       </div>
     </main>
   );

@@ -68,16 +68,38 @@ verificar; la prueba y el resultado de cada uno están en [VERIFICACION.md](VERI
 | **NFR-05 Seguridad** | Un usuario sin sesión o con un rol que no corresponde | Llama a una operación protegida directo a la API, sin pasar por la SPA | API | Operación normal | La rechaza en Problem Details y no revela datos ajenos | 100 % de los intentos rechazados con 401, 403 o 404 según el caso |
 | **NFR-06 Disponibilidad** | El padrón de residentes | No responde (caído o con error) | Capa anticorrupción del padrón | Durante la inscripción | Responde 503 con `Retry-After` sin crear la inscripción; el resto del sistema sigue atendiendo y el health indica qué falla | Respuesta en menos de 3,5 s (timeout de 3 s) y 0 inscripciones creadas sin validar la residencia |
 
-**Utility tree** (importancia para el negocio, dificultad técnica):
+### Utility tree
 
-| Atributo | Escenario | Prioridad |
-|---|---|---|
-| Integridad | NFR-04: 30 pedidos simultáneos por el último cupo | (A, A) |
-| Desplegabilidad | NFR-03: volver a levantarlo al año siguiente | (A, M) |
-| Mantenibilidad | NFR-01: preparar la temporada sin tocar código | (A, M) |
-| Disponibilidad | NFR-06: padrón caído durante la inscripción | (A, M) |
-| Seguridad | NFR-05: acceso indebido directo a la API | (A, B) |
-| Costo | NFR-02: entrar en el servidor compartido | (M, B) |
+Árbol de utilidad de ATAM (Clase 13): de la utilidad del sistema a cada atributo de calidad, un
+refinamiento y un escenario concreto con medida. Cada hoja lleva su prioridad (importancia para el
+negocio, dificultad técnica), con A alta, M media y B baja. El escenario completo, con sus seis partes,
+está en la tabla de arriba.
+
+```mermaid
+flowchart LR
+  U(["Utilidad"])
+  U --> I[Integridad] --> I1[Concurrencia en el último cupo] --> I2["30 pedidos simultáneos por el último cupo:<br/>1 confirmada, 0 sobreasignados, 0 duplicados<br/><b>(A, A)</b>"]
+  U --> D[Desplegabilidad] --> D1[Puesta en marcha anual] --> D2["Lo levanta alguien que no lo instaló:<br/>1 comando, menos de 10 min; 100 % de los datos tras reiniciar<br/><b>(A, M)</b>"]
+  U --> M[Mantenibilidad] --> M1[Preparar la temporada] --> M2["Temporada, edades, período y cupos desde el panel:<br/>0 líneas de código; 0 imports de FastAPI en las reglas<br/><b>(A, M)</b>"]
+  U --> V[Disponibilidad] --> V1[Falla de un sistema externo] --> V2["El padrón no responde:<br/>503 con Retry-After en menos de 3,5 s; 0 inscripciones sin validar<br/><b>(A, M)</b>"]
+  U --> S[Seguridad] --> S1[Acceso indebido] --> S2["Llamada directa a la API sin sesión o con otro rol:<br/>401, 403 o 404 en el 100 % de los casos<br/><b>(A, B)</b>"]
+  U --> C[Costo] --> C1[Servidor compartido] --> C2["Corre las 3 semanas en el servidor municipal:<br/>menos de 1,5 GB de RAM; 0 licencias y 0 servicios en la nube<br/><b>(M, B)</b>"]
+  classDef alta fill:#fde2e2,stroke:#d64545
+  classDef media fill:#fff4cc,stroke:#f6b800
+  classDef baja fill:#eef3f8,stroke:#64748b
+  class I2 alta
+  class D2,M2,V2,S2 media
+  class C2 baja
+```
+
+| Atributo | Refinamiento | Escenario (estímulo → respuesta y medida) | NFR | Prioridad |
+|---|---|---|---|---|
+| Integridad | Concurrencia en el último cupo | 30 familias y administrativos piden el último cupo a la vez → 1 confirmada y el resto en espera, en orden; 0 sobreasignados, 0 duplicados | NFR-04 | (A, A) |
+| Desplegabilidad | Puesta en marcha anual | Alguien que no lo instaló lo levanta al año siguiente → 1 comando, menos de 10 min; 100 % de los datos tras reiniciar | NFR-03 | (A, M) |
+| Mantenibilidad | Preparar la temporada | La persona de sistemas cambia temporada, edades, período y cupos → desde el panel, sin tocar código; 0 imports de FastAPI en las reglas | NFR-01 | (A, M) |
+| Disponibilidad | Falla de un sistema externo | El padrón no responde durante la inscripción → 503 con `Retry-After` en menos de 3,5 s; 0 inscripciones sin validar | NFR-06 | (A, M) |
+| Seguridad | Acceso indebido | Un usuario sin sesión o con otro rol llama directo a la API → 401, 403 o 404 en el 100 % de los casos | NFR-05 | (A, B) |
+| Costo | Servidor compartido | El sistema corre las 3 semanas en el servidor municipal → menos de 1,5 GB de RAM; 0 licencias y 0 servicios en la nube | NFR-02 | (M, B) |
 
 ## 5. Requisitos funcionales
 

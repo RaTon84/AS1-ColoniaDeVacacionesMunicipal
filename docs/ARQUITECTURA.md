@@ -276,9 +276,9 @@ decide CONFIRMADA o LISTA_ESPERA → `repository.py` guarda → 201 con `Locatio
 
 ## 11. API
 
-Contract-first ([ADR-009](adr/009-contract-first.md)): el contrato es [openapi.yaml](openapi.yaml) y se ve
+Contract-first: el contrato es [openapi.yaml](openapi.yaml) y se ve
 en Swagger UI (http://localhost:8082). Versión en la ruta (`/api/v1`) y errores con Problem Details
-([ADR-010](adr/010-errores-y-versionado.md)).
+(RFC 9457).
 
 | Método | Ruta | Roles | Para qué |
 |---|---|---|---|
@@ -317,12 +317,6 @@ por otro.
 | [004](adr/004-padron-rest-sincronico-acl.md) | Padrón por REST sincrónico con capa anticorrupción | Consistencia, disponibilidad | Aceptada |
 | [005](adr/005-keycloak-oidc-pkce.md) | Keycloak con OIDC, Authorization Code + PKCE | Seguridad | Aceptada |
 | [006](adr/006-docker-compose.md) | Despliegue con Docker Compose, versiones fijas y valores por defecto | Desplegabilidad, costo | Aceptada |
-| [007](adr/007-lista-de-espera.md) | Lista de espera por turno, con cancelación y promoción | Equidad | Aceptada |
-| [008](adr/008-roles.md) | Tres roles: tutor, administrativo y administrador del sistema | Seguridad | Aceptada |
-| [009](adr/009-contract-first.md) | API contract-first con OpenAPI y Swagger UI | Interoperabilidad | Aceptada (reemplaza la decisión code-first del 15/10) |
-| [010](adr/010-errores-y-versionado.md) | Problem Details y versionado en la URL | Interoperabilidad | Aceptada |
-| [011](adr/011-spa-sin-bff.md) | SPA servida por el backend, sin BFF ni API Gateway | Costo | Aceptada |
-| [012](adr/012-verificacion-sin-ci.md) | Verificación de NFRs con un script en contenedor, sin CI | Verificabilidad | Aceptada |
 
 Plantilla para nuevas decisiones: [000-plantilla.md](adr/000-plantilla.md).
 
@@ -342,8 +336,8 @@ sobre el C4 de Contenedores. Cada riesgo termina en un ADR, una verificación o 
 | NFR-04 último cupo (A, A) | Bloqueo de fila del turno (ADR-003) | La equidad depende por completo del bloqueo y de que toda escritura sobre el turno lo use | Consistencia a cambio de capacidad: los pedidos al mismo turno se atienden de a uno | Si el pico fuera mucho mayor, la escritura escala solo en vertical | Lo aceptamos para 1.500 familias; se verifica con 30 pedidos simultáneos. Táctica si creciera: una cola delante |
 | NFR-06 padrón caído (A, M) | REST sincrónico con ACL y timeout (ADR-004) | La disponibilidad de la inscripción depende de la del padrón | Regla siempre aplicada y respuesta inmediata, a costa de disponibilidad | Si el padrón se cae en la apertura, nadie se puede inscribir | Lo aceptamos: 503 con `Retry-After`, nadie pierde el lugar ya asignado y la inscripción dura 3 semanas. Verificado con el padrón detenido |
 | NFR-03 volver a levantarlo (A, M) | Compose con versiones fijas y valores por defecto (ADR-006) | Depende de que las imágenes sigan disponibles en los registros públicos | Reproducibilidad a cambio de no recibir parches solos | Una imagen con vulnerabilidades conocidas un año después; Keycloak en `start-dev` pierde los usuarios creados a mano | Actualizar las versiones a propósito antes de cada temporada; para producción, volumen o base para Keycloak y modo `start` (ADR-005) |
-| NFR-01 preparar la temporada (A, M) | Configuración de temporada desde el panel (ADR-008) y reglas en `service.py` (ADR-002) | Depende de que nadie saltee las capas | Simplicidad a cambio de atar el dominio a SQLAlchemy | Erosión: que la regla de dependencias se rompa sin que nadie lo note | Fitness function de arquitectura en la verificación |
-| NFR-05 acceso directo a la API (A, B) | Validación del JWT y `require_roles` en cada operación (ADR-005, ADR-008) | Depende de validar firma, emisor, audiencia y vencimiento en el backend | — | El período de inscripción hoy lo controla solo la SPA: la API acepta inscripciones fuera de fecha si se la llama directo | Mover el control del período al servicio de inscripciones (pendiente) |
+| NFR-01 preparar la temporada (A, M) | Configuración de temporada desde el panel y reglas en `service.py` (ADR-002) | Depende de que nadie saltee las capas | Simplicidad a cambio de atar el dominio a SQLAlchemy | Erosión: que la regla de dependencias se rompa sin que nadie lo note | Fitness function de arquitectura en la verificación |
+| NFR-05 acceso directo a la API (A, B) | Validación del JWT y `require_roles` en cada operación (ADR-005) | Depende de validar firma, emisor, audiencia y vencimiento en el backend | — | El período de inscripción hoy lo controla solo la SPA: la API acepta inscripciones fuera de fecha si se la llama directo | Mover el control del período al servicio de inscripciones (pendiente) |
 
 **No-riesgos:** la base sin puerto publicado (solo la ve la app); la consulta al padrón antes de bloquear
 el turno, que evita retener el bloqueo mientras se espera a un sistema externo; un chico no puede quedar

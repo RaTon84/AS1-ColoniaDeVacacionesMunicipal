@@ -32,7 +32,7 @@ archivos. Cada módulo tiene tres responsabilidades, con dependencias en un solo
 
 Las reglas viven solo en `service.py`, que no conoce HTTP: informa los errores con excepciones del dominio
 (`EdadFueraDeRango`, `NoResidente`, `InscripcionDuplicada`…) y un manejador global las traduce a Problem
-Details (ADR-010). Es «liviana» porque deja afuera, a propósito, las entidades separadas del ORM, las
+Details (RFC 9457). Es «liviana» porque deja afuera, a propósito, las entidades separadas del ORM, las
 interfaces abstractas de cada repositorio y el contenedor de inyección de dependencias.
 
 ### Consecuencias
@@ -75,4 +75,4 @@ Fitness function en `verificacion/verificar.py`: analiza el código de cada `ser
 
 ## Más información
 
-Clase 3 (Clean Architecture). Relacionado con ADR-001 y ADR-010.
+Clase 3 (Clean Architecture). Relacionado con ADR-001.

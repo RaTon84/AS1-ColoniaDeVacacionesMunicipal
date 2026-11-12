@@ -6,7 +6,7 @@
 ## Contexto y problema
 
 La consigna pide login con OIDC y al menos dos roles. Los usuarios son tutores y personal del municipio.
-La aplicación es una SPA servida por el mismo backend (ADR-011): el navegador no puede guardar un secreto
+La aplicación es una SPA servida por el mismo backend: el navegador no puede guardar un secreto
 de cliente. ¿Quién autentica a los usuarios, con qué flujo, y dónde y qué se valida del token?
 
 ## Drivers de la decisión
@@ -31,7 +31,7 @@ externa y se reconstruye solo. Keycloak 26 corre en el compose con el realm `col
 (`keycloak/realm-colonia.json`), que se importa al arrancar. La SPA es un cliente público que hace el flujo
 **Authorization Code con PKCE (S256)**. El backend valida cada token: la firma con las claves públicas
 (JWKS) de Keycloak, el emisor (`iss`), la audiencia (`aud`) y el vencimiento (`exp`), y autoriza por los
-roles del realm (ADR-008).
+roles del realm (`tutor`, `administrativo` y `administrador_sistema`).
 
 ### Consecuencias
 
@@ -83,4 +83,4 @@ Resultado en `docs/VERIFICACION.md` (NFR-05).
 
 ## Más información
 
-Clase 11 (OAuth 2.0, OIDC y PKCE). Relacionado con ADR-008 (roles) y ADR-011 (SPA sin BFF).
+Clase 11 (OAuth 2.0, OIDC y PKCE). Relacionado con ADR-006 (despliegue del realm).

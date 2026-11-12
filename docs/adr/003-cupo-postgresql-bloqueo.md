@@ -89,5 +89,5 @@ prueba cancelar con promoción y reinscripción. Resultado en `docs/VERIFICACION
 
 ## Más información
 
-Relacionado con ADR-004 (padrón) y ADR-007 (lista de espera). Revisar si el pico real superara lo medido
+Relacionado con ADR-004 (padrón). Revisar si el pico real superara lo medido
 en la verificación.

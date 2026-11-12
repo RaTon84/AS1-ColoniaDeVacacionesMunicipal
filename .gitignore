@@ -20,3 +20,6 @@ Thumbs.db
 
 # Respaldos de draw.io
 *.drawio.bkp
+
+# Estado intermedio de la verificación (lo usa la fase «persistencia»)
+verificacion/resultados/estado.json

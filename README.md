@@ -27,7 +27,7 @@ Documentación completa en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) y decisi
 | `wiremock/` | Respuestas simuladas del padrón de residentes | #1 |
 | `backend/` | API FastAPI, dominio, migraciones (Alembic) y datos iniciales | #2 Backend |
 | `frontend/` | SPA en React con las vistas por rol | #3 Frontend y login |
-| `backend/tests/` | Tests del dominio y de integración | #4 Tests y verificación de NFRs |
+| `verificacion/` | Script de verificación de NFRs y sus resultados | #4 Tests y verificación de NFRs |
 | `docs/` | Documento de arquitectura, ADRs, NFRs, mockups y planilla de decisiones | Todos |
 
 ## Levantar el sistema
@@ -72,6 +72,18 @@ docker compose up -d --build
 | `30111222`, `30222333`, `30333444` | Residente |
 | `50000000` | Padrón caído (503) |
 | Cualquier otro | No residente |
+
+## Verificación de NFRs
+
+Con el sistema levantado (sobre una base de prueba):
+
+```bash
+docker compose --profile verificacion run --rm verificador
+```
+
+Prueba seguridad, reglas de negocio, concurrencia en el último cupo, padrón caído y la regla de
+arquitectura, y deja el resultado en `verificacion/resultados/`. Qué se verifica, cómo y los resultados
+obtenidos: [docs/VERIFICACION.md](docs/VERIFICACION.md).
 
 ## Forma de trabajo
 

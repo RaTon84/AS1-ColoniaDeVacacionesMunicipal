@@ -81,6 +81,19 @@ services:
     ports:
       - "8082:8080"
 
+  # Verificación de NFRs (docs/VERIFICACION.md). No arranca con `up`: solo con el perfil «verificacion».
+  # Comparte la red de Keycloak para iniciar sesión con PKCE igual que el navegador (localhost:8080).
+  verificador:
+    image: python:3.12.7-slim-bookworm
+    profiles: ["verificacion"]
+    network_mode: "service:keycloak"
+    entrypoint: ["python", "/verificacion/verificar.py"]
+    volumes:
+      - ./verificacion:/verificacion
+      - ./backend:/backend:ro
+    depends_on:
+      - app
+
 volumes:
   postgres_data:
 

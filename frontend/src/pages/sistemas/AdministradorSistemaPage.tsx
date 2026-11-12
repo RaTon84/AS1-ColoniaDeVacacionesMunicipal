@@ -1,3 +1,5 @@
+import { useEffect, useState, type FormEvent } from "react";
+import { useMatch } from "react-router-dom";
 import {
   Settings2,
   CalendarDays,
@@ -13,67 +15,451 @@ import {
   ClipboardList,
   UserCog,
   CalendarCog,
-} from 'lucide-react'
+} from "lucide-react";
+import keycloak from "../../auth/keycloak";
+import {
+  guardarPeriodoInscripcion,
+  obtenerEstadoSistema,
+  obtenerPeriodoInscripcion,
+  type PeriodoInscripcion,
+} from "../../services/sistema";
+import { obtenerTurnos } from "../../services/turnos";
+import type { Turno } from "../../types/turno";
 
-const configuracion = {
-  temporada: 2027,
-  cuposPrevistos: 600,
-  periodoInscripcion: '3 semanas',
-  edadMinima: 6,
-  edadMaxima: 12,
+const MAX_CUPOS_TEMPORADA = 600;
+const urlConfiguracion = "/api/v1/admin/configuracion-temporada";
+
+type TurnoEditable = Turno & { cupoEditable: string };
+
+interface ConfiguracionTemporada {
+  temporada: number;
+  edad_minima: number;
+  edad_maxima: number;
 }
 
 const servicios = [
   {
-    nombre: 'API FastAPI',
-    descripcion: 'Lógica de negocio e inscripciones',
+    id: "api",
+    nombre: "API FastAPI",
+    descripcion: "Lógica de negocio e inscripciones",
     icono: Server,
   },
   {
-    nombre: 'PostgreSQL',
-    descripcion: 'Persistencia de datos',
+    id: "database",
+    nombre: "PostgreSQL",
+    descripcion: "Persistencia de datos",
     icono: Database,
   },
   {
-    nombre: 'Keycloak',
-    descripcion: 'Autenticación y roles de usuarios',
+    id: "keycloak",
+    nombre: "Keycloak",
+    descripcion: "Autenticación y roles de usuarios",
     icono: KeyRound,
   },
   {
-    nombre: 'Padrón municipal',
-    descripcion: 'Verificación de residencia mediante WireMock',
+    id: "padron",
+    nombre: "Padrón municipal",
+    descripcion: "Verificación de residencia mediante WireMock",
     icono: ShieldCheck,
   },
-]
+] as const;
 
 const perfiles = [
   {
-    nombre: 'Tutor',
-    descripcion: 'Realiza inscripciones y consulta sus solicitudes.',
+    nombre: "Tutor",
+    descripcion: "Realiza inscripciones y consulta sus solicitudes.",
     icono: UsersRound,
-    color: 'bg-blue-100 text-blue-700',
+    color: "bg-blue-100 text-blue-700",
   },
   {
-    nombre: 'Administrativo',
+    nombre: "Administrativo",
     descripcion:
-      'Consulta inscripciones y atiende las solicitudes que requieren revisión.',
+      "Consulta inscripciones y atiende las solicitudes que requieren revisión.",
     icono: ClipboardList,
-    color: 'bg-emerald-100 text-emerald-700',
+    color: "bg-emerald-100 text-emerald-700",
   },
   {
-    nombre: 'Administrador de Sistemas',
+    nombre: "Administrador de Sistemas",
     descripcion:
-      'Supervisa la aplicación y administra la configuración técnica autorizada.',
+      "Supervisa la aplicación y administra la configuración técnica autorizada.",
     icono: UserCog,
-    color: 'bg-violet-100 text-violet-700',
+    color: "bg-violet-100 text-violet-700",
   },
-]
+];
 
 function AdministracionSistemaPage() {
+  const mostrarEstado = Boolean(useMatch("/sistemas/estado"));
+  const mostrarPerfiles = Boolean(useMatch("/sistemas/perfiles"));
+  const mostrarConfiguracion = !mostrarEstado && !mostrarPerfiles;
+
+  const [estado, setEstado] = useState<Awaited<
+    ReturnType<typeof obtenerEstadoSistema>
+  > | null>(null);
+  const [errorEstado, setErrorEstado] = useState(false);
+  const [comprobacion, setComprobacion] = useState(0);
+
+  const [periodo, setPeriodo] = useState<PeriodoInscripcion | null>(null);
+  const [apertura, setApertura] = useState("");
+  const [cierre, setCierre] = useState("");
+  const [guardandoPeriodo, setGuardandoPeriodo] = useState(false);
+  const [errorPeriodo, setErrorPeriodo] = useState("");
+  const [periodoGuardado, setPeriodoGuardado] = useState(false);
+
+  const [temporadaGuardada, setTemporadaGuardada] = useState<number | null>(null);
+  const [temporadaEditable, setTemporadaEditable] = useState("");
+  const [edadMinima, setEdadMinima] = useState("");
+  const [edadMaxima, setEdadMaxima] = useState("");
+  const [guardandoConfiguracion, setGuardandoConfiguracion] = useState(false);
+  const [errorConfiguracion, setErrorConfiguracion] = useState("");
+
+  const [turnosCupos, setTurnosCupos] = useState<TurnoEditable[] | null>(null);
+  const [guardandoCupos, setGuardandoCupos] = useState(false);
+  const [errorCupos, setErrorCupos] = useState("");
+  const [cuposGuardados, setCuposGuardados] = useState(false);
+
+  const totalGuardado = turnosCupos?.reduce(
+    (total, turno) => total + turno.cupo_total,
+    0,
+  );
+  const totalBorrador = turnosCupos?.reduce(
+    (total, turno) => total + Number(turno.cupoEditable),
+    0,
+  ) ?? 0;
+  const superaLimite = totalBorrador > MAX_CUPOS_TEMPORADA;
+
+  useEffect(() => {
+    let activo = true;
+    let temporizador: number | undefined;
+
+    async function cargarEstado() {
+      try {
+        if (!keycloak.token || keycloak.isTokenExpired()) {
+          await keycloak.updateToken(30);
+        }
+
+        if (!keycloak.token) {
+          throw new Error("No hay una sesión activa.");
+        }
+
+        const datos = await obtenerEstadoSistema(keycloak.token);
+
+        if (activo) {
+          setEstado(datos);
+          setErrorEstado(false);
+        }
+      } catch {
+        if (activo) {
+          setEstado(null);
+          setErrorEstado(true);
+        }
+      } finally {
+        if (activo) {
+          temporizador = window.setTimeout(cargarEstado, 30_000);
+        }
+      }
+    }
+
+    void cargarEstado();
+
+    return () => {
+      activo = false;
+      window.clearTimeout(temporizador);
+    };
+  }, [comprobacion]);
+
+  useEffect(() => {
+    let activo = true;
+
+    async function cargarPeriodo() {
+      try {
+        await keycloak.updateToken(30);
+
+        if (!keycloak.token) {
+          throw new Error("Volvé a iniciar sesión.");
+        }
+
+        const datos = await obtenerPeriodoInscripcion(keycloak.token);
+
+        if (activo) {
+          setPeriodo(datos);
+          setApertura(datos.apertura?.slice(0, 16) ?? "");
+          setCierre(datos.cierre?.slice(0, 16) ?? "");
+        }
+      } catch (error) {
+        if (activo) {
+          setErrorPeriodo(
+            error instanceof Error
+              ? error.message
+              : "No se pudo cargar el período de inscripción.",
+          );
+        }
+      }
+    }
+
+    void cargarPeriodo();
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let activo = true;
+
+    async function cargarConfiguracion() {
+      try {
+        await keycloak.updateToken(30);
+
+        if (!keycloak.token) {
+          throw new Error("Volvé a iniciar sesión.");
+        }
+
+        const respuesta = await fetch(urlConfiguracion, {
+          headers: { Authorization: `Bearer ${keycloak.token}` },
+          cache: "no-store",
+        });
+
+        if (!respuesta.ok) {
+          throw new Error("No se pudo cargar la configuración de la temporada.");
+        }
+
+        const datos: ConfiguracionTemporada = await respuesta.json();
+
+        if (activo) {
+          setTemporadaGuardada(datos.temporada);
+          setTemporadaEditable(String(datos.temporada));
+          setEdadMinima(String(datos.edad_minima));
+          setEdadMaxima(String(datos.edad_maxima));
+        }
+      } catch (error) {
+        if (activo) {
+          setErrorConfiguracion(
+            error instanceof Error
+              ? error.message
+              : "No se pudo cargar la configuración de la temporada.",
+          );
+        }
+      }
+    }
+
+    void cargarConfiguracion();
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (temporadaGuardada === null) return;
+
+    let activo = true;
+
+    async function cargarTurnosCupos() {
+      try {
+        await keycloak.updateToken(30);
+
+        if (!keycloak.token) {
+          throw new Error("Volvé a iniciar sesión.");
+        }
+
+        const turnos = await obtenerTurnos(keycloak.token);
+        if (!activo) return;
+
+        if (turnos.some((turno) => turno.temporada !== temporadaGuardada)) {
+          throw new Error("La temporada activa cambió. Recargá el panel.");
+        }
+
+        setTurnosCupos(
+          turnos.map((turno) => ({
+            ...turno,
+            cupoEditable: String(turno.cupo_total),
+          })),
+        );
+      } catch (error) {
+        if (activo) {
+          setErrorCupos(
+            error instanceof Error
+              ? error.message
+              : "No se pudieron cargar los turnos.",
+          );
+        }
+      }
+    }
+
+    void cargarTurnosCupos();
+
+    return () => {
+      activo = false;
+    };
+  }, [temporadaGuardada]);
+
+  async function guardarDistribucion(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+
+    if (
+      temporadaGuardada === null ||
+      !turnosCupos?.length ||
+      guardandoCupos ||
+      guardandoConfiguracion ||
+      guardandoPeriodo ||
+      superaLimite
+    ) return;
+
+    setErrorCupos("");
+    setCuposGuardados(false);
+    setGuardandoCupos(true);
+
+    try {
+      await keycloak.updateToken(30);
+
+      if (!keycloak.token) {
+        throw new Error("Volvé a iniciar sesión.");
+      }
+
+      const respuesta = await fetch("/api/v1/admin/distribucion-cupos", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${keycloak.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          temporada: temporadaGuardada,
+          turnos: turnosCupos.map((turno) => ({
+            turno_id: turno.id,
+            cupo_total: Number(turno.cupoEditable),
+          })),
+        }),
+      });
+
+      if (!respuesta.ok) {
+        const problema = await respuesta.json().catch(() => null);
+
+        throw new Error(
+          problema?.errors?.[0]?.mensaje ??
+            problema?.detail ??
+            "No se pudo guardar la distribución.",
+        );
+      }
+
+      const turnos: Turno[] = await respuesta.json();
+
+      setTurnosCupos(
+        turnos.map((turno) => ({
+          ...turno,
+          cupoEditable: String(turno.cupo_total),
+        })),
+      );
+      setCuposGuardados(true);
+    } catch (error) {
+      setErrorCupos(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la distribución.",
+      );
+    } finally {
+      setGuardandoCupos(false);
+    }
+  }
+
+  async function guardarConfiguracion(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+
+    if (guardandoConfiguracion || guardandoPeriodo || guardandoCupos) return;
+
+    setErrorConfiguracion("");
+
+    if (Number(edadMaxima) < Number(edadMinima)) {
+      setErrorConfiguracion("La edad máxima debe ser mayor o igual a la mínima.");
+      return;
+    }
+
+    setGuardandoConfiguracion(true);
+
+    try {
+      await keycloak.updateToken(30);
+
+      if (!keycloak.token) {
+        throw new Error("Volvé a iniciar sesión.");
+      }
+
+      const respuesta = await fetch(urlConfiguracion, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${keycloak.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          temporada: Number(temporadaEditable),
+          edad_minima: Number(edadMinima),
+          edad_maxima: Number(edadMaxima),
+        }),
+      });
+
+      if (!respuesta.ok) {
+        const problema = await respuesta.json().catch(() => null);
+
+        throw new Error(
+          problema?.errors?.[0]?.mensaje ??
+            problema?.detail ??
+            "No se pudo guardar la configuración.",
+        );
+      }
+
+      window.location.reload();
+    } catch (error) {
+      setErrorConfiguracion(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la configuración.",
+      );
+      setGuardandoConfiguracion(false);
+    }
+  }
+
+  async function manejarGuardadoPeriodo(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+
+    if (guardandoPeriodo || guardandoConfiguracion || guardandoCupos) return;
+
+    setErrorPeriodo("");
+    setPeriodoGuardado(false);
+
+    if (!apertura || !cierre || cierre <= apertura) {
+      setErrorPeriodo("El cierre debe ser posterior a la apertura.");
+      return;
+    }
+
+    setGuardandoPeriodo(true);
+
+    try {
+      await keycloak.updateToken(30);
+
+      if (!keycloak.token) {
+        throw new Error("Volvé a iniciar sesión.");
+      }
+
+      const datos = await guardarPeriodoInscripcion(
+        keycloak.token,
+        apertura,
+        cierre,
+      );
+
+      setPeriodo(datos);
+      setApertura(datos.apertura?.slice(0, 16) ?? "");
+      setCierre(datos.cierre?.slice(0, 16) ?? "");
+      setPeriodoGuardado(true);
+    } catch (error) {
+      setErrorPeriodo(
+        error instanceof Error ? error.message : "No se pudo guardar el período.",
+      );
+    } finally {
+      setGuardandoPeriodo(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-transparent px-5 py-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
-
         <header className="mb-7">
           <div className="mb-3 flex items-center gap-3">
             <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
@@ -84,7 +470,6 @@ function AdministracionSistemaPage() {
               <h1 className="text-3xl font-extrabold text-[#142D50]">
                 Administración del sistema
               </h1>
-
               <p className="mt-1 text-slate-600">
                 Configuración y supervisión de la colonia municipal.
               </p>
@@ -92,164 +477,359 @@ function AdministracionSistemaPage() {
           </div>
         </header>
 
+        <div hidden={!mostrarConfiguracion}>
+          <section
+            aria-label="Resumen de configuración"
+            className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
+              <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
+                <CalendarDays size={28} />
+              </div>
+
+              <div>
+                <p className="text-sm text-slate-500">Temporada</p>
+                <p className="text-2xl font-extrabold text-[#142D50]">
+                  {temporadaGuardada ?? periodo?.temporada ?? "—"}
+                </p>
+              </div>
+            </article>
+
+            <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
+              <div className="rounded-xl bg-emerald-100 p-3 text-emerald-700">
+                <UsersRound size={28} />
+              </div>
+
+              <div>
+                <p className="text-sm text-slate-500">Cupos previstos</p>
+                <p className="text-2xl font-extrabold text-[#142D50]">
+                  {totalGuardado ?? "—"}
+                </p>
+              </div>
+            </article>
+
+            <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
+              <div className="rounded-xl bg-amber-100 p-3 text-amber-700">
+                <Clock3 size={28} />
+              </div>
+
+              <div>
+                <p className="text-sm text-slate-500">Período de inscripción</p>
+                <p className="text-2xl font-extrabold text-[#142D50]">
+                  {periodo
+                    ? periodo.apertura && periodo.cierre
+                      ? "Configurado"
+                      : "Sin configurar"
+                    : "—"}
+                </p>
+              </div>
+            </article>
+          </section>
+
+          <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
+                <CalendarCog size={25} />
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-[#142D50]">
+                  Configuración de la temporada
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Parámetros previstos para el funcionamiento de la colonia.
+                </p>
+              </div>
+            </div>
+
+            {temporadaGuardada === null && !errorConfiguracion && (
+              <p role="status" className="mb-4 text-sm text-slate-600">
+                Cargando la configuración de la temporada…
+              </p>
+            )}
+
+            <form onSubmit={guardarConfiguracion} className="space-y-4">
+              <fieldset
+                disabled={
+                  temporadaGuardada === null ||
+                  guardandoConfiguracion ||
+                  guardandoPeriodo ||
+                  guardandoCupos
+                }
+                className="grid grid-cols-1 gap-4 md:grid-cols-2"
+              >
+                <label className="text-sm font-semibold text-slate-700">
+                  Temporada
+                  <input
+                    id="temporada-sistema"
+                    type="number"
+                    min={1}
+                    max={9999}
+                    required
+                    value={temporadaEditable}
+                    onChange={(evento) => setTemporadaEditable(evento.target.value)}
+                    className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                  />
+                </label>
+
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">
+                    Cupos totales previstos
+                  </p>
+                  <p className="mt-2 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                    {totalGuardado ?? "—"}
+                  </p>
+                </div>
+
+                <label className="text-sm font-semibold text-slate-700">
+                  Edad mínima
+                  <input
+                    id="edad-minima-sistema"
+                    type="number"
+                    min={0}
+                    required
+                    value={edadMinima}
+                    onChange={(evento) => setEdadMinima(evento.target.value)}
+                    className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                  />
+                </label>
+
+                <label className="text-sm font-semibold text-slate-700">
+                  Edad máxima
+                  <input
+                    id="edad-maxima-sistema"
+                    type="number"
+                    min={0}
+                    required
+                    value={edadMaxima}
+                    onChange={(evento) => setEdadMaxima(evento.target.value)}
+                    className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                  />
+                </label>
+              </fieldset>
+
+              <button
+                type="submit"
+                disabled={
+                  temporadaGuardada === null ||
+                  guardandoConfiguracion ||
+                  guardandoPeriodo ||
+                  guardandoCupos
+                }
+                className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {guardandoConfiguracion ? "Guardando…" : "Guardar configuración"}
+              </button>
+
+              {errorConfiguracion && (
+                <p
+                  role="alert"
+                  className="rounded-xl bg-red-50 p-3 text-sm text-red-800"
+                >
+                  {errorConfiguracion}
+                </p>
+              )}
+            </form>
+
+            <div className="mt-5 border-t border-slate-200 pt-5">
+              <h3 className="font-bold text-[#142D50]">Distribución de cupos</h3>
+
+              {turnosCupos === null && !errorCupos && !errorConfiguracion && (
+                <p role="status" className="mt-3 text-sm text-slate-600">
+                  Cargando turnos…
+                </p>
+              )}
+
+              {turnosCupos?.length === 0 && (
+                <p className="mt-3 text-sm text-slate-600">
+                  La temporada activa todavía no tiene turnos cargados.
+                </p>
+              )}
+
+              {turnosCupos && turnosCupos.length > 0 && (
+                <form onSubmit={guardarDistribucion} className="mt-4 space-y-4">
+                  <fieldset
+                    disabled={guardandoCupos || guardandoConfiguracion || guardandoPeriodo}
+                    className="min-w-0"
+                  >
+                    <div className="overflow-x-auto rounded-xl border border-slate-200">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-50 text-slate-700">
+                          <tr>
+                            <th scope="col" className="px-3 py-2">Sede</th>
+                            <th scope="col" className="px-3 py-2">Período</th>
+                            <th scope="col" className="px-3 py-2">Turno</th>
+                            <th scope="col" className="px-3 py-2">Cupos</th>
+                          </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-slate-200">
+                          {turnosCupos.map((turno) => (
+                            <tr key={turno.id}>
+                              <td className="px-3 py-2">{turno.sede}</td>
+                              <td className="whitespace-nowrap px-3 py-2">
+                                {turno.fecha_desde.split("-").reverse().join("/")}
+                                {" al "}
+                                {turno.fecha_hasta.split("-").reverse().join("/")}
+                              </td>
+                              <td className="px-3 py-2">{turno.nombre}</td>
+                              <td className="px-3 py-2">
+                                <input
+                                  aria-label={`Cupos para ${turno.sede}, ${turno.nombre}`}
+                                  type="number"
+                                  min={0}
+                                  max={MAX_CUPOS_TEMPORADA}
+                                  step={1}
+                                  required
+                                  value={turno.cupoEditable}
+                                  onChange={(evento) => {
+                                    const cupoEditable = evento.target.value;
+                                    setCuposGuardados(false);
+                                    setErrorCupos("");
+                                    setTurnosCupos((actuales) =>
+                                      actuales?.map((actual) =>
+                                        actual.id === turno.id
+                                          ? { ...actual, cupoEditable }
+                                          : actual,
+                                      ) ?? null,
+                                    );
+                                  }}
+                                  className="w-24 rounded-lg border border-slate-300 px-2 py-1.5"
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </fieldset>
+
+                  <p
+                    className={`text-sm font-semibold ${
+                      superaLimite ? "text-red-700" : "text-slate-700"
+                    }`}
+                  >
+                    {totalBorrador} de {MAX_CUPOS_TEMPORADA} cupos asignados
+                    {superaLimite && " · Supera el máximo de la temporada"}
+                  </p>
+
+                  <button
+                    type="submit"
+                    disabled={
+                      guardandoCupos ||
+                      guardandoConfiguracion ||
+                      guardandoPeriodo ||
+                      superaLimite
+                    }
+                    className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50"
+                  >
+                    {guardandoCupos ? "Guardando…" : "Guardar distribución"}
+                  </button>
+                </form>
+              )}
+
+              {errorCupos && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800"
+                >
+                  {errorCupos}
+                </p>
+              )}
+
+              {cuposGuardados && (
+                <p
+                  role="status"
+                  className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"
+                >
+                  Distribución guardada correctamente.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 border-t border-slate-200 pt-5">
+              <h3 className="font-bold text-[#142D50]">Período de inscripción</h3>
+              <p className="mt-1 text-sm text-slate-600">Hora argentina.</p>
+
+              {!periodo && !errorPeriodo && (
+                <p role="status" className="mt-3 text-sm text-slate-600">
+                  Cargando el período de inscripción…
+                </p>
+              )}
+
+              {periodo && (
+                <form onSubmit={manejarGuardadoPeriodo} className="mt-4 space-y-4">
+                  <fieldset
+                    disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
+                    onChange={() => {
+                      setPeriodoGuardado(false);
+                      setErrorPeriodo("");
+                    }}
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                  >
+                    <label className="min-w-0 text-sm font-semibold text-slate-700">
+                      Apertura
+                      <input
+                        type="datetime-local"
+                        required
+                        value={apertura}
+                        onChange={(evento) => setApertura(evento.target.value)}
+                        className="mt-2 block w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2"
+                      />
+                    </label>
+
+                    <label className="min-w-0 text-sm font-semibold text-slate-700">
+                      Cierre
+                      <input
+                        type="datetime-local"
+                        required
+                        value={cierre}
+                        onChange={(evento) => setCierre(evento.target.value)}
+                        className="mt-2 block w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2"
+                      />
+                    </label>
+                  </fieldset>
+
+                  <button
+                    type="submit"
+                    disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
+                    className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {guardandoPeriodo ? "Guardando…" : "Guardar período"}
+                  </button>
+                </form>
+              )}
+
+              {errorPeriodo && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800"
+                >
+                  {errorPeriodo}
+                </p>
+              )}
+
+              {periodoGuardado && (
+                <p
+                  role="status"
+                  className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"
+                >
+                  Período guardado correctamente.
+                </p>
+              )}
+            </div>
+          </section>
+
+          <div className="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
+            <Info size={20} className="shrink-0" />
+            <p>El total de cupos se calcula a partir de la distribución guardada.</p>
+          </div>
+        </div>
+
         <section
-          aria-label="Resumen de configuración"
-          className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          hidden={!mostrarEstado}
+          className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6"
         >
-
-          <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-            <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
-              <CalendarDays size={28} />
-            </div>
-
-            <div>
-              <p className="text-sm text-slate-500">
-                Temporada de ejemplo
-              </p>
-
-              <p className="text-2xl font-extrabold text-[#142D50]">
-                {configuracion.temporada}
-              </p>
-            </div>
-          </article>
-
-          <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-            <div className="rounded-xl bg-emerald-100 p-3 text-emerald-700">
-              <UsersRound size={28} />
-            </div>
-
-            <div>
-              <p className="text-sm text-slate-500">
-                Cupos previstos
-              </p>
-
-              <p className="text-2xl font-extrabold text-[#142D50]">
-                {configuracion.cuposPrevistos}
-              </p>
-            </div>
-          </article>
-
-          <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-            <div className="rounded-xl bg-amber-100 p-3 text-amber-700">
-              <Clock3 size={28} />
-            </div>
-
-            <div>
-              <p className="text-sm text-slate-500">
-                Período de inscripción
-              </p>
-
-              <p className="text-2xl font-extrabold text-[#142D50]">
-                {configuracion.periodoInscripcion}
-              </p>
-            </div>
-          </article>
-
-        </section>
-
-        <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
-              <CalendarCog size={25} />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold text-[#142D50]">
-                Configuración de la temporada
-              </h2>
-
-              <p className="text-sm text-slate-500">
-                Parámetros previstos para el funcionamiento de la colonia.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
-            <div>
-              <label
-                htmlFor="temporada-sistema"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Temporada
-              </label>
-
-              <input
-                id="temporada-sistema"
-                type="number"
-                value={configuracion.temporada}
-                readOnly
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="cupos-sistema"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Cupos totales previstos
-              </label>
-
-              <input
-                id="cupos-sistema"
-                type="number"
-                value={configuracion.cuposPrevistos}
-                readOnly
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="periodo-sistema"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Período de inscripción
-              </label>
-
-              <input
-                id="periodo-sistema"
-                type="text"
-                value={configuracion.periodoInscripcion}
-                readOnly
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="edades-sistema"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Rango de edades
-              </label>
-
-              <input
-                id="edades-sistema"
-                type="text"
-                value={`${configuracion.edadMinima} a ${configuracion.edadMaxima} años`}
-                readOnly
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-              />
-            </div>
-
-          </div>
-
-          <div className="mt-5 flex items-start gap-2 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-            <Info size={19} className="shrink-0" />
-            <p>
-              Esta sección es de solo lectura por ahora.
-              La edición de parámetros se habilitará únicamente
-              si el backend incorpora operaciones de configuración.
-            </p>
-          </div>
-
-        </section>
-
-        <section className="mb-6 rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-xl bg-cyan-100 p-3 text-cyan-700">
               <Activity size={25} />
@@ -259,7 +839,6 @@ function AdministracionSistemaPage() {
               <h2 className="text-xl font-bold text-[#142D50]">
                 Estado del sistema
               </h2>
-
               <p className="text-sm text-slate-500">
                 Servicios principales de la arquitectura.
               </p>
@@ -267,17 +846,16 @@ function AdministracionSistemaPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-
             {servicios.map((servicio) => {
-              const Icono = servicio.icono
+              const Icono = servicio.icono;
+              const resultado = estado?.services[servicio.id];
 
               return (
                 <article
                   key={servicio.nombre}
                   className="rounded-xl border border-slate-200 p-5"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-
+                  <div className="flex flex-col items-start gap-3">
                     <div className="flex items-start gap-3">
                       <div className="rounded-xl bg-slate-100 p-3 text-slate-600">
                         <Icono size={24} />
@@ -287,38 +865,77 @@ function AdministracionSistemaPage() {
                         <h3 className="font-bold text-[#142D50]">
                           {servicio.nombre}
                         </h3>
-
                         <p className="mt-1 text-sm text-slate-500">
                           {servicio.descripcion}
                         </p>
                       </div>
                     </div>
 
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                      Sin verificar
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        resultado === "ok"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : resultado === "error"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {resultado === "ok"
+                        ? "Operativo"
+                        : resultado === "error"
+                          ? "Con fallas"
+                          : "Sin verificar"}
                     </span>
-
                   </div>
                 </article>
-              )
+              );
             })}
-
           </div>
 
-          <div className="mt-5 flex items-start gap-2 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-            <Info size={19} className="shrink-0" />
+          <div
+            className={`mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl p-4 ${
+              errorEstado
+                ? "bg-red-50 text-red-800"
+                : estado
+                  ? "bg-emerald-50 text-emerald-800"
+                  : "bg-blue-50 text-blue-800"
+            }`}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              {estado ? (
+                <CheckCircle2 size={19} className="shrink-0" aria-hidden="true" />
+              ) : (
+                <Info size={19} className="shrink-0" aria-hidden="true" />
+              )}
 
-            <p>
-              El estado de los servicios todavía no se consulta
-              automáticamente. Más adelante integraremos los
-              mecanismos de supervisión disponibles.
-            </p>
+              <p role="status" className="text-sm font-semibold">
+                {errorEstado
+                  ? "Estado sin actualizar. No se pudo verificar la conexión con el sistema."
+                  : estado
+                    ? "Estado actualizado"
+                    : "Consultando el estado de los servicios…"}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={!estado && !errorEstado}
+              onClick={() => {
+                setEstado(null);
+                setErrorEstado(false);
+                setComprobacion((anterior) => anterior + 1);
+              }}
+              className="ml-auto shrink-0 rounded-lg bg-blue-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Actualizar
+            </button>
           </div>
-
         </section>
 
-        <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-
+        <section
+          hidden={!mostrarPerfiles}
+          className="rounded-2xl bg-white p-5 shadow-sm sm:p-6"
+        >
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-xl bg-violet-100 p-3 text-violet-700">
               <ShieldCheck size={25} />
@@ -328,7 +945,6 @@ function AdministracionSistemaPage() {
               <h2 className="text-xl font-bold text-[#142D50]">
                 Perfiles del sistema
               </h2>
-
               <p className="text-sm text-slate-500">
                 Responsabilidades de los tres perfiles definidos.
               </p>
@@ -337,7 +953,7 @@ function AdministracionSistemaPage() {
 
           <div className="space-y-3">
             {perfiles.map((perfil) => {
-              const Icono = perfil.icono
+              const Icono = perfil.icono;
 
               return (
                 <article
@@ -352,7 +968,6 @@ function AdministracionSistemaPage() {
                     <h3 className="font-bold text-[#142D50]">
                       {perfil.nombre}
                     </h3>
-
                     <p className="mt-1 text-sm leading-relaxed text-slate-600">
                       {perfil.descripcion}
                     </p>
@@ -364,30 +979,18 @@ function AdministracionSistemaPage() {
                     aria-hidden="true"
                   />
                 </article>
-              )
+              );
             })}
           </div>
 
           <p className="mt-5 text-sm text-slate-500">
-            La autenticación y asignación real de roles
-            se integrará mediante Keycloak.
+            La autenticación y asignación real de roles se integrará mediante
+            Keycloak.
           </p>
-
         </section>
-
-        <div className="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-          <Info size={20} className="shrink-0" />
-
-          <p>
-            Esta es una versión visual del panel de Sistemas.
-            La configuración mostrada es ilustrativa y
-            todavía no se realizan operaciones sobre el backend.
-          </p>
-        </div>
-
       </div>
     </main>
-  )
+  );
 }
 
-export default AdministracionSistemaPage
+export default AdministracionSistemaPage;

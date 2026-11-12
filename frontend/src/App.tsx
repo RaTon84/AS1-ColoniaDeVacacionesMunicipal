@@ -153,7 +153,7 @@ function App() {
         />
 
         <Route
-          path="/sistemas"
+          path="/sistemas/*"
           element={
             <RutaProtegida
               rolesPermitidos={['administrador_sistema']}

@@ -1,25 +1,52 @@
-# ADR-NNN · Título corto de la decisión
+# ADR-NNN: Título corto que nombra el problema y la solución
 
-**Estado:** Propuesta · Aceptada · Reemplazada por ADR-NNN
-**Fecha:** dd/mm/aaaa
-**Autor:** nombre de quien la redacta
+**Estado:** Propuesta · Aceptada · Rechazada · Deprecada · Reemplazada por ADR-NNN
+**Fecha:** dd/mm/aaaa · **Decisores:** quiénes tomaron la decisión
 
-## Contexto
+Formato MADR 4 (Markdown Architectural Decision Records). Un ADR aceptado no se edita: se reemplaza por
+otro que lo diga en su estado.
 
-Qué hay que resolver y qué lo condiciona: escenario 6A, NFRs, restricciones.
+## Contexto y problema
 
-## Decisión
+Qué hay que decidir y por qué ahora, en dos o tres oraciones. Si se puede, formularlo como pregunta.
 
-«Vamos a…», en una o dos oraciones.
+## Drivers de la decisión
 
-## Alternativas
+- NFR o restricción del escenario que pesa (con su número, por ejemplo NFR-04).
+- …
 
-Qué más se evaluó y por qué se descartó (una línea por alternativa).
+## Opciones consideradas
 
-## Consecuencias
+- Opción 1 (la elegida también va en la lista)
+- Opción 2
+- Opción 3
 
-Qué se gana y qué se resigna.
+## Resultado de la decisión
 
-## NFRs
+Opción elegida: «Opción 1», porque [justificación en relación con los drivers].
 
-Cuáles favorece y cuáles perjudica.
+### Consecuencias
+
+- Bueno, porque …
+- Malo, porque … (siempre hay al menos una)
+
+### Confirmación
+
+Cómo se verifica que la decisión se cumple: un test, un script, una revisión, una medición.
+
+## Pros y contras de las opciones
+
+### Opción 1
+
+- Bueno, porque …
+- Neutral, porque …
+- Malo, porque …
+
+### Opción 2
+
+- Bueno, porque …
+- Malo, porque …
+
+## Más información
+
+ADRs relacionados, enlaces y cuándo habría que revisar la decisión.

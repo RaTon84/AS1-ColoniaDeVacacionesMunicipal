@@ -1,56 +1,93 @@
 # ADR-003: Base relacional con transacción y bloqueo de fila para el cupo
 
-**Estado:** Aceptada (15/10/2026)
+**Estado:** Aceptada
+**Fecha:** 15/10/2026 · **Decisores:** grupo Los Betos
 
-## Contexto
+## Contexto y problema
 
-NFR de equidad: el primer día de inscripción muchas familias y administrativos intentan anotarse al
-mismo tiempo en el mismo turno. Si dos pedidos leen «queda 1 cupo» a la vez, los dos se confirman y el
-turno queda sobreasignado. La asignación tiene que ser por orden de llegada, un chico no puede quedar
-inscripto dos veces en la temporada y las inscripciones no se pueden perder.
+El primer día de inscripción muchas familias y administrativos intentan anotarse al mismo tiempo en el
+mismo turno. Si dos pedidos leen «queda 1 cupo» a la vez, los dos se confirman y el turno queda
+sobreasignado. ¿Con qué base y con qué mecanismo garantizamos que nunca se asignen más cupos de los que
+hay, que se respete el orden de llegada y que un chico no quede inscripto dos veces?
 
-## Decisión
+## Drivers de la decisión
 
-Vamos a usar **PostgreSQL 16** (con SQLAlchemy y migraciones Alembic que se aplican solas al arrancar) y
-procesar cada inscripción en **una transacción que bloquea la fila del turno** (`SELECT … FOR UPDATE`)
-mientras cuenta los confirmados y decide si la inscripción queda confirmada o en lista de espera.
+- NFR-04 Integridad y equidad: 0 cupos sobreasignados y 0 duplicados, aun con pedidos simultáneos.
+- NFR-03 Desplegabilidad: el esquema se tiene que crear solo al año siguiente.
+- NFR-02 Costo y NFR-01 Mantenibilidad: sin piezas nuevas que operar.
 
-Un **índice único parcial** sobre `(dni_chico, temporada)`, que excluye las inscripciones canceladas,
-es la última barrera contra duplicados aunque dos pedidos del mismo chico lleguen juntos: si salta, se
-responde 409. Un chico con la inscripción cancelada puede volver a inscribirse.
+## Opciones consideradas
 
-## Alternativas
+- PostgreSQL con transacción y bloqueo pesimista de la fila del turno
+- PostgreSQL contando y después insertando, sin control
+- PostgreSQL con bloqueo optimista (columna de versión y reintentos)
+- Cola de mensajes que serializa las inscripciones
+- MongoDB
+- SQLite
 
-- **Sin control (contar y después insertar):** simple, pero permite sobreasignar el último cupo.
-- **Bloqueo optimista (columna de versión y reintentos):** no bloquea, pero con mucha contención en el
-  mismo turno obliga a reintentar y complica el código para un beneficio que esta escala no necesita.
-- **Cola de mensajes que serializa las inscripciones:** garantiza el orden, pero suma un broker, un
-  proceso consumidor y una respuesta asincrónica. Es sobredimensionar para 1.500 familias.
-- **MongoDB (documental):** la unicidad y el cupo quedarían a cargo del código, con transacciones menos
-  naturales que en una base relacional.
-- **SQLite:** cero instalación, pero bloquea toda la base al escribir; no sirve con varias personas
-  inscribiendo a la vez.
+## Resultado de la decisión
 
-## Consecuencias
+Opción elegida: «PostgreSQL con transacción y bloqueo pesimista», porque la base garantiza la invariante
+sin piezas nuevas. Cada inscripción bloquea la fila del turno (`SELECT … FOR UPDATE`), cuenta las
+confirmadas y decide si queda confirmada o en lista de espera. Un **índice único parcial** sobre
+(`dni_chico`, `temporada`), que excluye las canceladas, es la última barrera contra duplicados: si salta,
+se responde 409. Se accede con SQLAlchemy y el esquema se versiona con Alembic, que migra solo al arrancar.
 
-- Se gana: no se puede sobreasignar un turno; el orden de llegada lo define el orden en que cada pedido
-  obtiene el bloqueo; la base garantiza la invariante, sin piezas nuevas.
-- Se resigna: los pedidos al mismo turno se atienden de a uno durante unos milisegundos. Con el volumen
-  del escenario no se nota, pero la escritura escala solo en vertical: si el pico fuera mucho mayor,
-  haría falta una cola delante.
-- La consulta al padrón se hace antes de bloquear el turno, para no mantener el bloqueo mientras se
-  espera a un sistema externo (ADR-004).
-- La misma transacción con bloqueo se usa al cancelar: libera el cupo y promueve al primero de la lista
-  de espera.
+### Consecuencias
 
-## NFRs
+- Bueno, porque no se puede sobreasignar un turno y el orden de llegada es el orden en que cada pedido
+  obtiene el bloqueo.
+- Bueno, porque la misma transacción con bloqueo se usa al cancelar (promueve a la primera en espera) y
+  al cambiar el cupo.
+- Bueno, porque la consulta al padrón se hace antes de bloquear el turno, así que el bloqueo no se retiene
+  mientras se espera a un sistema externo (ADR-004).
+- Malo, porque los pedidos al mismo turno se atienden de a uno durante unos milisegundos.
+- Malo, porque la escritura escala solo en vertical: si el pico fuera mucho mayor, haría falta una cola
+  delante.
 
-- Favorece: consistencia, equidad (orden de llegada), integridad de los datos y simplicidad.
-- Perjudica levemente: el rendimiento bajo contención extrema en un mismo turno (no esperada).
-
-## Confirmación
+### Confirmación
 
 `verificacion/verificar.py` deja un turno con un solo cupo libre y lanza 30 pedidos simultáneos
 (familias y administrativos a la vez): tiene que quedar 1 confirmada, 29 en lista de espera con posiciones
 consecutivas y 0 cupos libres. También lanza 10 pedidos simultáneos del mismo chico (1 × 201 y 9 × 409) y
 prueba cancelar con promoción y reinscripción. Resultado en `docs/VERIFICACION.md` (NFR-04).
+
+## Pros y contras de las opciones
+
+### PostgreSQL con bloqueo pesimista
+
+- Bueno, porque la invariante la garantiza la base y el código es fácil de leer.
+- Neutral, porque toda escritura sobre un turno tiene que usar el mismo bloqueo.
+- Malo, porque serializa los pedidos al mismo turno.
+
+### Contar y después insertar, sin control
+
+- Bueno, porque es lo más simple.
+- Malo, porque permite sobreasignar el último cupo.
+
+### Bloqueo optimista
+
+- Bueno, porque no bloquea.
+- Malo, porque con mucha contención en el mismo turno obliga a reintentar y complica el código para un
+  beneficio que esta escala no necesita.
+
+### Cola de mensajes
+
+- Bueno, porque garantiza el orden y absorbe picos grandes.
+- Malo, porque suma un broker, un consumidor y una respuesta asincrónica. Es sobredimensionar para 1.500
+  familias.
+
+### MongoDB
+
+- Bueno, porque el esquema es flexible.
+- Malo, porque la unicidad y el cupo quedarían a cargo del código, con transacciones menos naturales.
+
+### SQLite
+
+- Bueno, porque no requiere instalación.
+- Malo, porque bloquea toda la base al escribir y no sirve con varias personas inscribiendo a la vez.
+
+## Más información
+
+Relacionado con ADR-004 (padrón) y ADR-007 (lista de espera). Revisar si el pico real superara lo medido
+en la verificación.

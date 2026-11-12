@@ -1,59 +1,88 @@
 # ADR-006: Despliegue con Docker Compose, versiones fijas y valores por defecto
 
-**Estado:** Aceptada (29/10/2026)
+**Estado:** Aceptada
+**Fecha:** 29/10/2026 · **Decisores:** grupo Los Betos
 
-## Contexto
+## Contexto y problema
 
-La restricción del escenario es la más exigente: el sistema se usa 3 semanas al año y al año siguiente
-se tiene que volver a levantar sin que nadie se acuerde de cómo. Corre en un servidor municipal
-compartido con otros sistemas y lo mantiene una sola persona. La consigna pide levantar todo con un
-solo comando.
+La restricción del escenario es la más exigente: el sistema se usa 3 semanas al año y al año siguiente se
+tiene que volver a levantar sin que nadie se acuerde de cómo. Corre en un servidor municipal compartido y
+lo mantiene una sola persona. La consigna pide levantar todo con un solo comando. ¿Cómo empaquetamos y
+desplegamos el sistema para que dentro de un año levante igual que hoy?
 
-## Decisión
+## Drivers de la decisión
 
-Vamos a desplegar todo con **Docker Compose** y un solo comando, `docker compose up -d --build`:
+- NFR-03 Desplegabilidad y recuperación (la restricción del escenario).
+- NFR-02 Costo: aprovechar el servidor compartido sin chocar con otros sistemas.
+- NFR-01 Mantenibilidad: sin instructivos que haya que recordar.
+- Consigna: un solo comando de docker o podman compose.
 
-- **Imágenes con versión fija** (`postgres:16.4-alpine`, `keycloak:26.0.0`, `wiremock:3.9.1`,
-  `swagger-ui:v5.17.14`, y para construir la app `node:22.12.0` y `python:3.12.7-slim`): dentro de un
-  año se descarga exactamente lo mismo.
-- **Una imagen de la app que incluye la SPA compilada** y corre con un usuario sin privilegios (no root).
-- **Valores por defecto para todas las variables:** no hace falta crear un `.env`; `.env.example`
-  documenta qué se puede cambiar.
-- **Arranque automático:** migraciones y datos iniciales al iniciar la app (ADR-003) y realm de Keycloak
-  importado (ADR-005).
-- **Red interna y puertos mínimos:** los servicios se llaman por nombre (`postgres`, `keycloak`,
-  `wiremock`); la base no publica puertos; solo se publican los que usa el navegador (app 8000, Keycloak
-  8080, Swagger UI 8082) y el del mock (8081) para mostrarlo en la demo.
-- **`depends_on` con healthcheck:** la app espera a que PostgreSQL responda.
+## Opciones consideradas
 
-## Alternativas
+- Docker Compose con imágenes de versión fija y valores por defecto
+- Instalación manual en el servidor
+- Kubernetes
+- Docker Compose con imágenes `latest`
+- Docker Compose con variables obligatorias en un `.env`
 
-- **Instalación manual en el servidor (Python, PostgreSQL y Keycloak a mano):** sin Docker, pero depende
-  de un instructivo que nadie va a recordar y choca con otros sistemas del servidor compartido.
-- **Kubernetes:** pensado para muchos nodos y alta disponibilidad; para una sola persona y un servidor
-  es sobredimensionar.
-- **Imágenes con `latest`:** siempre actualizadas, pero el año siguiente pueden traer cambios
-  incompatibles y el sistema podría no levantar.
-- **Variables obligatorias en un `.env` sin valores por defecto:** más explícito, pero es un paso más
-  para olvidarse.
+## Resultado de la decisión
 
-## Consecuencias
+Opción elegida: «Docker Compose con versiones fijas y valores por defecto», porque es lo único que levanta
+con un comando en una máquina limpia y se descarga igual dentro de un año. Concretamente:
 
-- Se gana: cualquiera con Docker levanta el sistema con un comando y una máquina limpia; los contenedores
-  aíslan al sistema del resto del servidor compartido.
-- Se resigna: hay que tener Docker instalado; las imágenes ocupan espacio en disco; las versiones fijas
-  no reciben parches de seguridad solas, y hay que actualizarlas a propósito antes de cada temporada.
-- Las contraseñas por defecto son de demo y están en el repo; en el servidor real se cambian en el `.env`.
-- Sin HTTPS en el TP: en producción, TLS se agrega con el proxy del municipio.
+- imágenes con versión fija (`postgres:16.4-alpine`, `keycloak:26.0.0`, `wiremock:3.9.1`,
+  `swagger-ui:v5.17.14`, y para construir la app `node:22.12.0` y `python:3.12.7-slim`);
+- una imagen de la app que incluye la SPA compilada y corre con un usuario sin privilegios;
+- valores por defecto para todas las variables: no hace falta crear un `.env`;
+- migraciones, datos iniciales y realm de Keycloak automáticos al arrancar (ADR-003, ADR-005);
+- red interna con los servicios llamados por nombre; la base no publica puertos;
+- `depends_on` con healthcheck: la app espera a que PostgreSQL responda.
 
-## NFRs
+### Consecuencias
 
-- Favorece: mantenibilidad y recuperabilidad (la restricción del escenario), portabilidad y costo.
-- Perjudica levemente: el consumo de disco y la seguridad si no se cambian las contraseñas de demo.
+- Bueno, porque cualquiera con Docker levanta el sistema con `docker compose up -d --build`.
+- Bueno, porque los contenedores aíslan al sistema del resto del servidor compartido.
+- Malo, porque las versiones fijas no reciben parches de seguridad solas: hay que actualizarlas a
+  propósito antes de cada temporada.
+- Malo, porque las contraseñas por defecto son de demo y están en el repo; en el servidor real se cambian
+  en el `.env`.
+- Malo, porque no hay HTTPS en el TP: en producción, TLS lo pone el proxy del municipio.
 
-## Confirmación
+### Confirmación
 
 En una máquina con Docker y sin nada más: clonar el repo y correr `docker compose up -d --build`
 levanta los cinco servicios con la base migrada, los turnos cargados y los usuarios de prueba. Se mide el
 tiempo de arranque y, después de `docker compose restart`, que las inscripciones sigan estando.
 Resultado en `docs/VERIFICACION.md` (NFR-03).
+
+## Pros y contras de las opciones
+
+### Compose con versiones fijas y valores por defecto
+
+- Bueno, porque es reproducible y no requiere pasos previos.
+- Malo, porque hay que tener Docker y las imágenes ocupan espacio en disco.
+
+### Instalación manual
+
+- Bueno, porque no requiere Docker.
+- Malo, porque depende de un instructivo que nadie va a recordar y choca con otros sistemas del servidor.
+
+### Kubernetes
+
+- Bueno, porque da alta disponibilidad y escalado.
+- Malo, porque está pensado para muchos nodos: para una sola persona y un servidor es sobredimensionar.
+
+### Imágenes `latest`
+
+- Bueno, porque siempre están actualizadas.
+- Malo, porque al año siguiente pueden traer cambios incompatibles y el sistema podría no levantar.
+
+### Variables obligatorias en un `.env`
+
+- Bueno, porque es más explícito.
+- Malo, porque es un paso más que se olvida.
+
+## Más información
+
+Clase 10 (Docker y Compose) y Clase 13 (Twelve-Factor: configuración en variables de entorno, logs a la
+salida estándar, paridad entre entornos).

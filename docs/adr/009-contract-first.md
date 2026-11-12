@@ -1,44 +1,72 @@
 # ADR-009: API contract-first con OpenAPI y Swagger UI
 
-**Estado:** Aceptada (29/10/2026). Reemplaza la decisión «code-first» de la votación del 15/10.
+**Estado:** Aceptada. Reemplaza la decisión «code-first» de la votación del 15/10.
+**Fecha:** 29/10/2026 · **Decisores:** grupo Los Betos
 
-## Contexto
+## Contexto y problema
 
-La consigna pide una API documentada con OpenAPI. En la votación inicial el grupo eligió code-first:
-dejar que FastAPI genere el contrato a partir del código. En la Clase 10 la cátedra mostró el enfoque
-contract-first, con un `openapi.yaml` servido por un contenedor de Swagger UI. Cuatro integrantes trabajan
-en paralelo: el frontend necesita saber qué devuelve la API antes de que el backend esté terminado.
+La consigna pide una API documentada con OpenAPI. En la votación inicial el grupo eligió code-first; en la
+Clase 10 la cátedra mostró el enfoque contract-first, con un `openapi.yaml` servido por un contenedor de
+Swagger UI. Cuatro integrantes trabajan en paralelo y el frontend necesita saber qué devuelve la API antes
+de que el backend esté terminado. ¿Cuál es la fuente de verdad de la interfaz HTTP?
 
-## Decisión
+## Drivers de la decisión
 
-Vamos a escribir el contrato **primero** en `docs/openapi.yaml` y a mostrarlo con el contenedor
-**swagger-ui** (http://localhost:8082). El backend implementa ese contrato. FastAPI no publica su propio
-`/docs` ni `/openapi.json`, para que haya una sola fuente de verdad.
+- Trabajo en paralelo del equipo (frontend y backend).
+- Interoperabilidad: un contrato estándar que documente también los errores.
+- NFR-01 Mantenibilidad: que un cambio en la API sea una decisión explícita.
 
-## Alternativas
+## Opciones consideradas
 
-- **Code-first (la votación inicial):** menos trabajo, y FastAPI lo hace solo; pero el contrato aparece
-  recién cuando el código existe, no documenta bien los errores (Problem Details) y cualquier cambio en
-  el código cambia el contrato sin que nadie lo decida.
-- **Contract-first con generación de código:** el contrato es la fuente y se generan los modelos;
-  agrega una herramienta más al ciclo de build para una API de 16 operaciones.
-- **Documentar la API en el README o en un documento de texto:** se desactualiza y no se puede probar.
+- Contract-first: `docs/openapi.yaml` escrito a mano y mostrado con Swagger UI
+- Code-first: el contrato lo genera FastAPI desde el código
+- Contract-first con generación de código
+- Documentar la API en el README o en un documento de texto
 
-## Consecuencias
+## Resultado de la decisión
 
-- Se gana: el contrato se discute y se revisa en el PR antes de programar; el frontend se escribe contra
-  él; Swagger UI permite probar la API con login de Keycloak (botón *Authorize*).
-- Se resigna: hay que mantener el contrato a mano, y nada impide automáticamente que el código se aparte
-  de él. Pasó con las operaciones de configuración de la temporada, que se agregaron al contrato después.
-  Un test de contrato (por ejemplo, con Schemathesis) quedaría como mejora.
-- La API permite llamadas desde el origen de Swagger UI (CORS limitado a `http://localhost:8082`).
+Opción elegida: «Contract-first con Swagger UI», porque el contrato se discute y se revisa antes de
+programar. El contrato es `docs/openapi.yaml` y se ve en el contenedor `swagger-ui`
+(http://localhost:8082). El backend lo implementa y FastAPI no publica su propio `/docs` ni
+`/openapi.json`, para que haya una sola fuente de verdad.
 
-## NFRs
+### Consecuencias
 
-- Favorece: mantenibilidad, interoperabilidad y trabajo en paralelo del equipo.
-- Perjudica levemente: el costo de desarrollo (escribir y mantener el YAML).
+- Bueno, porque el frontend se escribe contra el contrato y Swagger UI permite probar la API con login de
+  Keycloak (botón *Authorize*).
+- Bueno, porque los errores en Problem Details quedan documentados (ADR-010).
+- Malo, porque el contrato se mantiene a mano y nada impide automáticamente que el código se aparte. Pasó
+  con las operaciones de configuración de la temporada, que se agregaron al contrato después. Un test de
+  contrato (por ejemplo, con Schemathesis) queda como mejora.
 
-## Confirmación
+### Confirmación
 
 Las 16 operaciones que implementa el backend están en `docs/openapi.yaml`, y los códigos que verifica
 `docs/VERIFICACION.md` (201, 401, 403, 404, 409, 422, 503) están declarados en el contrato.
+
+## Pros y contras de las opciones
+
+### Contract-first con Swagger UI
+
+- Bueno, porque el contrato existe antes que el código.
+- Malo, porque hay que mantener el YAML a mano.
+
+### Code-first
+
+- Bueno, porque es menos trabajo y FastAPI lo hace solo.
+- Malo, porque el contrato aparece recién con el código, documenta mal los errores y cambia sin que nadie
+  lo decida.
+
+### Contract-first con generación de código
+
+- Bueno, porque el contrato y el código no se pueden separar.
+- Malo, porque suma una herramienta al build para una API de 16 operaciones.
+
+### README o documento de texto
+
+- Bueno, porque no requiere herramientas.
+- Malo, porque se desactualiza y no se puede probar.
+
+## Más información
+
+Clases 9 y 10. Relacionado con ADR-010.

@@ -305,8 +305,9 @@ corriendo con un usuario sin privilegios. URLs y usuarios de prueba en el [READM
 
 ## 13. Decisiones (ADRs)
 
-Formato: MADR simplificada de la cátedra, con «Confirmación» (cómo se verifica). Un ADR aceptado no se
-edita: se reemplaza por otro.
+Formato: **MADR 4** (contexto y problema, drivers, opciones consideradas, resultado con consecuencias
+buenas y malas, confirmación, y pros y contras de cada opción). Un ADR aceptado no se edita: se reemplaza
+por otro.
 
 | ADR | Decisión | NFR principal | Estado |
 |---|---|---|---|

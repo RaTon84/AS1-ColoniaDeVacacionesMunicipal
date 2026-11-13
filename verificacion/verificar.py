@@ -63,11 +63,13 @@ def llamar(metodo, ruta, token=None, cuerpo=None, base=APP, timeout=20):
     if token:
         pedido.add_header("Authorization", f"Bearer {token}")
     inicio = time.perf_counter()
+    # Los encabezados quedan como HTTPMessage, que los busca sin distinguir mayúsculas (uvicorn los manda
+    # en minúscula: con un dict, h.get("Location") daba None aunque la respuesta lo trajera).
     try:
         with urllib.request.urlopen(pedido, timeout=timeout) as r:
-            status, encabezados, crudo = r.status, dict(r.headers), r.read()
+            status, encabezados, crudo = r.status, r.headers, r.read()
     except urllib.error.HTTPError as e:
-        status, encabezados, crudo = e.code, dict(e.headers), e.read()
+        status, encabezados, crudo = e.code, e.headers, e.read()
     ms = (time.perf_counter() - inicio) * 1000
     try:
         contenido = json.loads(crudo) if crudo else None
@@ -247,7 +249,7 @@ def principal():
     nueva = {"usuario": f"verif{corrida}", "nombre": "Cuenta", "apellido": "Verificacion",
              "email": f"verif{corrida}@example.com", "rol": "administrativo", "clave_temporal": "Temporal123!"}
     s, h, c, _ = llamar("POST", "/api/v1/admin/usuarios", t["sysadmin"], nueva)
-    creada_ok = s == 201 and isinstance(c, dict) and c.get("rol") == "administrativo"
+    creada_ok = s == 201 and bool(h.get("Location")) and isinstance(c, dict) and c.get("rol") == "administrativo"
     if creada_ok:
         cambio = {k: c[k] for k in ("nombre", "apellido", "email")} | {"rol": "administrativo", "habilitado": False}
         sb, _, cb, _ = llamar("PUT", f"/api/v1/admin/usuarios/{c['id']}", t["sysadmin"], cambio)

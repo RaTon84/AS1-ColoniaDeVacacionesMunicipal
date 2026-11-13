@@ -64,8 +64,8 @@ class InscripcionService:
                         f"a {configuracion.edad_maxima} años al inicio de la temporada"
                     )
 
-                if not self.padron.es_residente(payload.dni_tutor):
-                    raise NoResidente("El tutor no figura con domicilio en la jurisdicción")
+                if not self.padron.es_residente(payload.dni_chico.strip()):
+                      raise NoResidente("El niño no figura con domicilio en la jurisdicción")
 
                 turno = self.turnos.get_for_update(db, payload.turno_id)
                 if not turno or turno.temporada != temporada:

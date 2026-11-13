@@ -1,1 +1,15 @@
-{"request":{"method":"GET","urlPathPattern":"/residentes/(30111222|30222333|30333444)"},"response":{"status":200,"headers":{"Content-Type":"application/json"},"jsonBody":{"residente":true}}}
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/residentes/(53148263|53871642|54529317|55268431|55736924|56319587|57042863|57861429|58623741|59348276)"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "residente": true
+    }
+  }
+}

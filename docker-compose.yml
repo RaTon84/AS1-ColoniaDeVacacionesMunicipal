@@ -54,6 +54,9 @@ services:
       KEYCLOAK_ISSUER_URL: http://localhost:8080/realms/colonia
       KEYCLOAK_INTERNAL_URL: http://keycloak:8080/realms/colonia
       KEYCLOAK_CLIENT_ID: colonia-spa
+      # Cliente de servicio para gestionar las cuentas del personal (secreto de demo: cambiarlo en el .env).
+      KEYCLOAK_ADMIN_CLIENT_ID: colonia-admin-api
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-colonia_admin_demo_cambiar}
       KEYCLOAK_PUBLIC_URL: http://localhost:8080
       PUBLIC_APP_URL: http://localhost:8000
       AUTH_ENABLED: "true"

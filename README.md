@@ -27,7 +27,7 @@ Documentación completa en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) y decisi
 | `wiremock/` | Respuestas simuladas del padrón de residentes | #1 |
 | `backend/` | API FastAPI, dominio, migraciones (Alembic) y datos iniciales | #2 Backend |
 | `frontend/` | SPA en React con las vistas por rol | #3 Frontend y login |
-| `backend/tests/` | Tests del dominio y de integración | #4 Tests y verificación de NFRs |
+| `verificacion/` | Script de verificación de NFRs y sus resultados | #4 Tests y verificación de NFRs |
 | `docs/` | Documento de arquitectura, ADRs, NFRs, mockups y planilla de decisiones | Todos |
 
 ## Levantar el sistema
@@ -35,7 +35,7 @@ Documentación completa en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) y decisi
 Requisito: Docker Desktop (o Podman Desktop) funcionando.
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
 No hace falta crear un `.env`: cada variable tiene un valor por defecto. Para cambiar alguno, copiar
@@ -45,15 +45,15 @@ Para empezar de cero (borra los datos de PostgreSQL):
 
 ```bash
 docker compose down -v
-docker compose up --build
+docker compose up -d --build
 ```
 
 ## URLs
 
 | Servicio | URL |
 |---|---|
-| Aplicación (desde el issue #2) | http://localhost:8000 |
-| Swagger / OpenAPI (desde el issue #2) | http://localhost:8000/docs |
+| Aplicación | http://localhost:8000 |
+| Documentación de la API (Swagger UI, desde `docs/openapi.yaml`) | http://localhost:8082 |
 | Keycloak | http://localhost:8080 (consola: `/admin`, usuario `admin`, clave `admin_demo_cambiar`) |
 | Mock del padrón (WireMock) | http://localhost:8081/__admin/ |
 
@@ -65,6 +65,13 @@ docker compose up --build
 | Administrativo | `admin1` | `Admin123!` |
 | Administrador del sistema | `sysadmin1` | `SysAdmin123!` |
 
+El administrador del sistema registra más cuentas del personal (administrativos y administradores del
+sistema), las da de baja o cambia su rol desde **Usuarios y perfiles**. Las cuentas nuevas se crean con
+una clave temporal que hay que cambiar en el primer ingreso.
+
+Si ya tenías el sistema levantado de antes, recreá Keycloak para que importe el realm actualizado:
+`docker compose up -d --force-recreate keycloak` (se pierden las cuentas creadas a mano).
+
 ## DNIs de prueba del padrón
 
 | DNI | Respuesta del mock |
@@ -72,6 +79,18 @@ docker compose up --build
 | `30111222`, `30222333`, `30333444` | Residente |
 | `50000000` | Padrón caído (503) |
 | Cualquier otro | No residente |
+
+## Verificación de NFRs
+
+Con el sistema levantado (sobre una base de prueba):
+
+```bash
+docker compose --profile verificacion run --rm verificador
+```
+
+Prueba seguridad, reglas de negocio, concurrencia en el último cupo, padrón caído y la regla de
+arquitectura, y deja el resultado en `verificacion/resultados/`. Qué se verifica, cómo y los resultados
+obtenidos: [docs/VERIFICACION.md](docs/VERIFICACION.md).
 
 ## Forma de trabajo
 

@@ -3,7 +3,6 @@ from datetime import date
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
 from app.core.errors import (
     EdadFueraDeRango,
     InscripcionDuplicada,
@@ -11,6 +10,7 @@ from app.core.errors import (
     NoResidente,
     TurnoInexistente,
 )
+from app.modules.administracion.temporadas import obtener_configuracion_activa
 from app.modules.inscripciones.model import EstadoInscripcion, Inscripcion
 from app.modules.inscripciones.schemas import InscripcionCreate
 from app.integrations.padron import PadronClient
@@ -20,7 +20,6 @@ from app.modules.turnos.repository import TurnoRepository
 
 class InscripcionService:
     def __init__(self):
-        self.settings = get_settings()
         self.inscripciones = InscripcionRepository()
         self.turnos = TurnoRepository()
         self.padron = PadronClient()
@@ -51,27 +50,31 @@ class InscripcionService:
     def crear(
         self, db: Session, payload: InscripcionCreate, creado_por: str
     ) -> Inscripcion:
-        edad = self._edad_al_inicio_temporada(
-            payload.fecha_nacimiento, self.settings.temporada
-        )
-        if edad < 6 or edad > 12:
-            raise EdadFueraDeRango(
-                "La colonia admite chicos de 6 a 12 años al inicio de la temporada"
-            )
-
-        if not self.padron.es_residente(payload.dni_tutor):
-            raise NoResidente("El tutor no figura con domicilio en la jurisdicción")
-
         try:
             with db.begin():
+                configuracion = obtener_configuracion_activa(db)
+                temporada = configuracion.temporada
+                edad = self._edad_al_inicio_temporada(
+                    payload.fecha_nacimiento, temporada
+                )
+
+                if not configuracion.edad_minima <= edad <= configuracion.edad_maxima:
+                    raise EdadFueraDeRango(
+                        f"La colonia admite chicos de {configuracion.edad_minima} "
+                        f"a {configuracion.edad_maxima} años al inicio de la temporada"
+                    )
+
+                if not self.padron.es_residente(payload.dni_tutor):
+                    raise NoResidente("El tutor no figura con domicilio en la jurisdicción")
+
                 turno = self.turnos.get_for_update(db, payload.turno_id)
-                if not turno or turno.temporada != self.settings.temporada:
+                if not turno or turno.temporada != temporada:
                     raise TurnoInexistente(
-                        f"No existe el turno {payload.turno_id} en la temporada {self.settings.temporada}"
+                        f"No existe el turno {payload.turno_id} en la temporada {temporada}"
                     )
 
                 if self.inscripciones.exists_for_dni_and_season(
-                    db, payload.dni_chico, self.settings.temporada
+                    db, payload.dni_chico, temporada
                 ):
                     raise InscripcionDuplicada(
                         "El chico ya está inscripto en esta temporada"
@@ -87,7 +90,7 @@ class InscripcionService:
 
                 nueva = Inscripcion(
                     turno_id=turno.id,
-                    temporada=self.settings.temporada,
+                    temporada=temporada,
                     dni_chico=payload.dni_chico.strip(),
                     nombre_chico=payload.nombre_chico.strip(),
                     apellido_chico=payload.apellido_chico.strip(),
@@ -116,11 +119,12 @@ class InscripcionService:
         ve_todas: bool,
     ) -> Inscripcion:
         with db.begin():
+            temporada = obtener_configuracion_activa(db).temporada
             inscripcion = self.inscripciones.get(db, inscripcion_id)
 
             if (
                 inscripcion is None
-                or inscripcion.temporada != self.settings.temporada
+                or inscripcion.temporada != temporada
                 or (not ve_todas and inscripcion.creado_por != usuario)
             ):
                 raise InscripcionInexistente(

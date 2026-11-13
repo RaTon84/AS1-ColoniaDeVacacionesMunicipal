@@ -40,7 +40,7 @@
         "http://localhost:8000",
         "http://localhost:8082",
         "http://localhost:5173"
-],
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
       },
@@ -58,13 +58,27 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "colonia-admin-api",
+      "name": "Colonia API - gestión de cuentas del personal",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "colonia_admin_demo_cambiar",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [],
+      "webOrigins": []
     }
   ],
   "users": [
     {
       "username": "tutor1",
       "enabled": true,
-      "email": "tutor1@demo.local",
+      "email": "tutor1@example.com",
       "emailVerified": true,
       "firstName": "Tutor",
       "lastName": "Demo",
@@ -83,7 +97,7 @@
     {
       "username": "admin1",
       "enabled": true,
-      "email": "admin1@demo.local",
+      "email": "admin1@example.com",
       "emailVerified": true,
       "firstName": "Administrativo",
       "lastName": "Demo",
@@ -102,7 +116,7 @@
     {
       "username": "sysadmin1",
       "enabled": true,
-      "email": "sysadmin1@demo.local",
+      "email": "sysadmin1@example.com",
       "emailVerified": true,
       "firstName": "Administrador",
       "lastName": "Sistema",
@@ -117,6 +131,19 @@
       "realmRoles": [
         "administrador_sistema"
       ]
+    },
+    {
+      "username": "service-account-colonia-admin-api",
+      "enabled": true,
+      "serviceAccountClientId": "colonia-admin-api",
+      "clientRoles": {
+        "realm-management": [
+          "view-users",
+          "query-users",
+          "manage-users",
+          "view-realm"
+        ]
+      }
     }
   ]
 }

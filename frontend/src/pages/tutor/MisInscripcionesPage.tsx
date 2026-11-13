@@ -1,19 +1,130 @@
-import { Link } from 'react-router-dom'
-import { Plus, ClipboardList, Info } from 'lucide-react'
+import { Link } from "react-router-dom";
+import { Plus, ClipboardList, Info } from "lucide-react";
 
-import InscripcionCard from '../../components/InscripcionesCard'
-import { inscripcionesEjemplo } from '../../data/inscripcionesEjemplo'
-
+import InscripcionCard from "../../components/InscripcionesCard";
+import { useEffect, useState } from "react";
+import type { Inscripcion } from "../../data/inscripcionesEjemplo";
+import keycloak from "../../auth/keycloak";
+import {
+  obtenerMisInscripciones,
+  cancelarInscripcion,
+} from "../../services/inscripciones";
+import { obtenerTurnos } from "../../services/turnos";
 function MisInscripcionesPage() {
-  const inscripciones = inscripcionesEjemplo
+  const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [cancelandoId, setCancelandoId] = useState<number | null>(null);
+  const [errorCancelacion, setErrorCancelacion] = useState("");
+  const [mensajeCancelacion, setMensajeCancelacion] = useState("");
+  const [actualizacion, setActualizacion] = useState(0);
+
+  useEffect(() => {
+    let activo = true;
+
+    async function cargarInscripciones() {
+      try {
+        await keycloak.updateToken(30);
+
+        const token = keycloak.token;
+
+        if (!token) {
+          throw new Error("No hay una sesión activa.");
+        }
+
+        const [registros, turnos] = await Promise.all([
+          obtenerMisInscripciones(token),
+          obtenerTurnos(token),
+        ]);
+
+        const estados = {
+          CONFIRMADA: "Confirmada",
+          LISTA_ESPERA: "Lista de espera",
+          CANCELADA: "Cancelada",
+        } as const;
+
+        const datos: Inscripcion[] = registros.map((registro) => {
+          const turno = turnos.find((t) => t.id === registro.turno_id);
+
+          return {
+            ...registro,
+            estado: estados[registro.estado],
+            turno: turno?.nombre ?? `Turno ${registro.turno_id}`,
+            sede: turno?.sede ?? "Sede no disponible",
+            fecha_inscripcion: registro.creado_en.slice(0, 10),
+            posicion_espera: registro.posicion_espera ?? undefined,
+          };
+        });
+
+        if (activo) {
+          setInscripciones(datos);
+        }
+      } catch (error) {
+        if (activo) {
+          setError(
+            error instanceof Error
+              ? error.message
+              : "No se pudieron cargar tus inscripciones.",
+          );
+        }
+      } finally {
+        if (activo) {
+          setCargando(false);
+        }
+      }
+    }
+
+    void cargarInscripciones();
+
+    return () => {
+      activo = false;
+    };
+  }, [actualizacion]);
+
+  async function manejarCancelacion(inscripcion: Inscripcion) {
+    if (cancelandoId !== null) return;
+
+    const confirmar = window.confirm(
+      `¿Querés cancelar la inscripción de ${inscripcion.nombre_chico} ${inscripcion.apellido_chico}?`,
+    );
+
+    if (!confirmar) return;
+
+    setCancelandoId(inscripcion.id);
+    setErrorCancelacion("");
+    setMensajeCancelacion("");
+
+    try {
+      await keycloak.updateToken(30);
+
+      const token = keycloak.token;
+
+      if (!token) {
+        throw new Error("No hay una sesión activa.");
+      }
+
+      await cancelarInscripcion(inscripcion.id, token);
+
+      setMensajeCancelacion(
+        `La inscripción de ${inscripcion.nombre_chico} ${inscripcion.apellido_chico} fue cancelada correctamente.`,
+      );
+
+      setActualizacion((anterior) => anterior + 1);
+    } catch (error) {
+      setErrorCancelacion(
+        error instanceof Error
+          ? error.message
+          : "No se pudo cancelar la inscripción.",
+      );
+    } finally {
+      setCancelandoId(null);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-transparent px-5 py-8 lg:px-10">
-
       <div className="mx-auto max-w-7xl">
-
         <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
           <div>
             <h1 className="text-3xl font-extrabold text-[#142D50]">
               Mis inscripciones
@@ -31,11 +142,9 @@ function MisInscripcionesPage() {
             <Plus size={19} />
             Nueva inscripción
           </Link>
-
         </header>
 
         <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-6">
-
           <div className="mb-5 flex items-center gap-2">
             <ClipboardList size={22} className="text-[#1769B3]" />
 
@@ -44,21 +153,45 @@ function MisInscripcionesPage() {
             </h2>
           </div>
 
-          {inscripciones.length > 0 ? (
+          {errorCancelacion && (
+            <p
+              role="alert"
+              className="mb-4 rounded-xl bg-red-50 p-4 text-red-700"
+            >
+              {errorCancelacion}
+            </p>
+          )}
 
+          {mensajeCancelacion && (
+            <p
+              role="status"
+              className="mb-4 rounded-xl bg-green-50 p-4 text-green-800"
+            >
+              {mensajeCancelacion}
+            </p>
+          )}
+
+          {cargando ? (
+            <p role="status" className="py-6 text-slate-500">
+              Cargando tus inscripciones...
+            </p>
+          ) : error ? (
+            <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-700">
+              {error}
+            </p>
+          ) : inscripciones.length > 0 ? (
             <div className="flex flex-col gap-4">
               {inscripciones.map((inscripcion) => (
                 <InscripcionCard
                   key={inscripcion.id}
                   inscripcion={inscripcion}
+                  onCancelar={manejarCancelacion}
+                  cancelando={cancelandoId !== null}
                 />
               ))}
             </div>
-
           ) : (
-
             <div className="rounded-xl bg-slate-50 px-6 py-12 text-center">
-
               <ClipboardList
                 size={42}
                 className="mx-auto mb-4 text-slate-400"
@@ -69,30 +202,24 @@ function MisInscripcionesPage() {
               </h3>
 
               <p className="mt-2 text-sm text-slate-500">
-                Cuando realices una inscripción,
-                vas a poder consultarla desde acá.
+                Cuando realices una inscripción, vas a poder consultarla desde
+                acá.
               </p>
-
             </div>
-
           )}
-
         </section>
 
         <div className="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
           <Info size={20} className="shrink-0" />
 
           <p>
-            Esta pantalla utiliza datos de ejemplo.
-            Las inscripciones reales se mostrarán cuando
-            conectemos el backend.
+            Acá se muestran únicamente las inscripciones que realizaste con tu
+            usuario en la temporada actual.
           </p>
         </div>
-
       </div>
-
     </main>
-  )
+  );
 }
 
-export default MisInscripcionesPage
+export default MisInscripcionesPage;

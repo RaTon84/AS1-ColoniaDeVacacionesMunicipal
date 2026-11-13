@@ -46,6 +46,23 @@ class PadronNoDisponible(ErrorDeDominio):
     headers = {"Retry-After": "30"}
 
 
+class UsuarioInexistente(ErrorDeDominio):
+    status, tipo, titulo = 404, "/problemas/usuario-inexistente", "Usuario inexistente"
+
+
+class UsuarioDuplicado(ErrorDeDominio):
+    status, tipo, titulo = 409, "/problemas/usuario-duplicado", "Usuario duplicado"
+
+
+class CambioNoPermitido(ErrorDeDominio):
+    status, tipo, titulo = 409, "/problemas/cambio-no-permitido", "Cambio no permitido"
+
+
+class IdentidadNoDisponible(ErrorDeDominio):
+    status, tipo, titulo = 503, "/problemas/identidad-no-disponible", "Proveedor de identidad no disponible"
+    headers = {"Retry-After": "30"}
+
+
 def _problem(request: Request, status: int, tipo: str, titulo: str, detalle: str | None,
              headers: dict[str, str] | None = None, **extra) -> JSONResponse:
     cuerpo = {"type": tipo, "title": titulo, "status": status}

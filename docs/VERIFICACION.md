@@ -104,7 +104,10 @@ sirven para comparar entre corridas.
 - **Cómo:** `verificar.py` inicia sesión con PKCE con `tutor1`, `admin1` y `sysadmin1`, y prueba: sin token
   → 401 con `WWW-Authenticate: Bearer` y `application/problem+json`; token con la firma alterada → 401;
   tutor en el listado administrativo → 403; administrativo en la configuración de temporada → 403; tutor
-  que pide una inscripción cargada por otra persona → 404.
+  que pide una inscripción cargada por otra persona → 404. Gestión de cuentas: el administrativo recibe 403
+  en `/admin/usuarios`; el administrador del sistema registra un administrativo (201 con `Location`), lo da
+  de baja (habilitado = false) y recibe 409 si intenta quitarse su propio rol. Las reglas de la gestión de
+  cuentas tienen además tests con Keycloak simulado: `docker compose exec app pytest tests/test_usuarios.py`.
 - **Resultado:** _pendiente de correr._
 
 ### NFR-06 · Disponibilidad

@@ -239,6 +239,29 @@ def principal():
     s2, _, _, _ = llamar("GET", "/api/v1/admin/configuracion-temporada", t["admin"])
     registrar("NFR-05 Seguridad", "Configuración de temporada: administrador del sistema / administrativo",
               "200 / 403", f"{s} / {s2}", s == 200 and s2 == 403)
+    # --- Gestión de cuentas del personal (solo el administrador del sistema)
+    s1, _, _, _ = llamar("GET", "/api/v1/admin/usuarios", t["admin"])
+    s2, _, lista, _ = llamar("GET", "/api/v1/admin/usuarios", t["sysadmin"])
+    registrar("NFR-05 Seguridad", "Cuentas del personal: administrativo / administrador del sistema",
+              "403 / 200", f"{s1} / {s2}", s1 == 403 and s2 == 200)
+    nueva = {"usuario": f"verif{corrida}", "nombre": "Cuenta", "apellido": "Verificacion",
+             "email": f"verif{corrida}@example.com", "rol": "administrativo", "clave_temporal": "Temporal123!"}
+    s, h, c, _ = llamar("POST", "/api/v1/admin/usuarios", t["sysadmin"], nueva)
+    creada_ok = s == 201 and isinstance(c, dict) and c.get("rol") == "administrativo"
+    if creada_ok:
+        cambio = {k: c[k] for k in ("nombre", "apellido", "email")} | {"rol": "administrativo", "habilitado": False}
+        sb, _, cb, _ = llamar("PUT", f"/api/v1/admin/usuarios/{c['id']}", t["sysadmin"], cambio)
+        creada_ok = sb == 200 and cb.get("habilitado") is False
+    registrar("NFR-05 Seguridad", "Alta de un administrativo y baja (deshabilitar) de esa cuenta",
+              "201 con Location, y 200 con habilitado = false", f"{s} · Location {h.get('Location')} · baja ok: {creada_ok}", creada_ok)
+    yo = json.loads(base64.urlsafe_b64decode(t["sysadmin"].split(".")[1] + "==")).get("sub")
+    propia = next((u for u in lista if u["id"] == yo), None) if isinstance(lista, list) else None
+    if propia:
+        s, _, c, _ = llamar("PUT", f"/api/v1/admin/usuarios/{yo}", t["sysadmin"],
+                            {k: propia[k] for k in ("nombre", "apellido", "email")} | {"rol": "administrativo", "habilitado": True})
+        registrar("NFR-05 Seguridad", "El administrador del sistema intenta quitarse su propio rol",
+                  "409 cambio-no-permitido", f"{s} {tipo(c)}", s == 409 and tipo(c) == "/problemas/cambio-no-permitido")
+
     temporada = conf["temporada"]
     edad = (conf["edad_minima"] + conf["edad_maxima"]) // 2
     nacimiento_ok = f"{temporada - edad - 1}-06-15"

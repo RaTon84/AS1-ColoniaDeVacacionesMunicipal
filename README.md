@@ -65,6 +65,13 @@ docker compose up -d --build
 | Administrativo | `admin1` | `Admin123!` |
 | Administrador del sistema | `sysadmin1` | `SysAdmin123!` |
 
+El administrador del sistema registra más cuentas del personal (administrativos y administradores del
+sistema), las da de baja o cambia su rol desde **Usuarios y perfiles**. Las cuentas nuevas se crean con
+una clave temporal que hay que cambiar en el primer ingreso.
+
+Si ya tenías el sistema levantado de antes, recreá Keycloak para que importe el realm actualizado:
+`docker compose up -d --force-recreate keycloak` (se pierden las cuentas creadas a mano).
+
 ## DNIs de prueba del padrón
 
 | DNI | Respuesta del mock |

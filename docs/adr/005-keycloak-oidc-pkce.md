@@ -33,14 +33,21 @@ externa y se reconstruye solo. Keycloak 26 corre en el compose con el realm `col
 (JWKS) de Keycloak, el emisor (`iss`), la audiencia (`aud`) y el vencimiento (`exp`), y autoriza por los
 roles del realm (`tutor`, `administrativo` y `administrador_sistema`).
 
+Las cuentas viven solo en Keycloak. Para que el administrador del sistema registre, dé de baja y cambie
+el rol del personal municipal desde el panel, el backend usa la API de administración de Keycloak con un
+cliente de servicio propio (`colonia-admin-api`, flujo client credentials) que tiene solo los permisos
+para ver y gestionar usuarios del realm. La app limita esa gestión a los roles del personal.
+
 ### Consecuencias
 
-- Bueno, porque la aplicación no maneja contraseñas y los usuarios se administran desde la consola de
-  Keycloak.
+- Bueno, porque la aplicación no guarda contraseñas: el personal se gestiona desde el panel del
+  administrador del sistema, y las cuentas y las claves quedan en Keycloak.
 - Bueno, porque el realm versionado hace que el login se reconstruya igual cada vez.
 - Bueno, porque MFA o el autorregistro con verificación de correo se activan en Keycloak sin tocar la
   aplicación.
 - Malo, porque es el contenedor más pesado (cerca de 500 MB de RAM) y tarda unos 20 segundos en arrancar.
+- Malo, porque el secreto del cliente de servicio permite gestionar usuarios del realm: va en el `.env`
+  y hay que cambiar el de demo en el servidor real.
 - Malo, porque en modo `start-dev` guarda sus datos dentro del contenedor: los usuarios creados a mano se
   pierden al recrearlo. Para el uso real hay que darle un volumen o la base PostgreSQL y pasar a `start`
   con HTTPS.
@@ -50,6 +57,8 @@ roles del realm (`tutor`, `administrativo` y `administrador_sistema`).
 `verificacion/verificar.py` inicia sesión con los tres usuarios de prueba por Authorization Code +
 PKCE, igual que la SPA, y comprueba: sin token → 401 con `WWW-Authenticate: Bearer`, token con la firma
 alterada → 401, tutor en el listado administrativo → 403 y tutor que pide una inscripción ajena → 404.
+También que solo el administrador del sistema gestiona cuentas (alta, baja y el 409 al intentar quitarse
+su propio rol); las reglas de la gestión de cuentas tienen tests en `backend/tests/test_usuarios.py`.
 Resultado en `docs/VERIFICACION.md` (NFR-05).
 
 ## Pros y contras de las opciones

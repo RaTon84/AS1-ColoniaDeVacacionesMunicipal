@@ -49,8 +49,8 @@ que se pueda mantener fácilmente, aproveche los recursos existentes y tenga poc
 |---|---|---|
 | Tutor o familia | Persona | Consulta turnos, inscribe a sus chicos, ve y cancela sus inscripciones |
 | Administrativo municipal | Persona | Inscribe en nombre de una familia, ve todas las inscripciones y las listas, cancela |
-| Administrador del sistema | Persona | Configura la temporada, las edades, el período de inscripción y el reparto de cupos; ve el estado de los servicios |
-| Proveedor de identidad (Keycloak) | Sistema externo | Autentica con OpenID Connect y entrega los roles; la aplicación comprueba los permisos de cada operación |
+| Administrador del sistema | Persona | Configura la temporada, las edades, el período de inscripción y el reparto de cupos; da de alta, de baja y cambia el rol de las cuentas del personal municipal; ve el estado de los servicios |
+| Proveedor de identidad (Keycloak) | Sistema externo | Autentica con OpenID Connect y entrega los roles; la aplicación comprueba los permisos de cada operación. Guarda las cuentas: la app gestiona las del personal a través de su API de administración |
 | Padrón de residentes | Sistema externo (simulado con WireMock) | Responde si un DNI tiene domicilio en la jurisdicción. Se consulta por REST sincrónico, con timeout de 3 s, a través de una capa anticorrupción. Si no responde, la inscripción devuelve 503 y no se crea |
 
 ## 4. NFRs escritos como escenarios
@@ -119,6 +119,7 @@ flowchart LR
 | RF-12 | Que el administrativo consulte todas las inscripciones y los listados |
 | RF-13 | Que el administrador del sistema configure la temporada, las edades, el período de inscripción y la distribución de cupos, y consulte el estado de los servicios |
 | RF-14 | Si el padrón no responde, devolver 503 y no confirmar la inscripción |
+| RF-15 | Que el administrador del sistema registre cuentas del personal municipal (administrativos y administradores del sistema), las dé de baja o las reactive y les cambie el rol |
 
 ## 6. Matriz de Pugh
 
@@ -213,6 +214,7 @@ flowchart TB
   swagger -- "Prueba la API" --> app
   app -- "Lee y escribe (SQL, transacciones)" --> db
   app -- "Descarga las claves para validar el JWT (JWKS)" --> kc
+  app -- "Gestiona las cuentas del personal (API de administración, cliente de servicio)" --> kc
   app -- "GET /residentes/{dni} (REST, timeout 3 s, ACL)" --> wm
 
   classDef persona fill:#08427b,color:#fff,stroke:#052e56
@@ -228,7 +230,7 @@ flowchart TB
 | Aplicación (`app`) | Python 3.12 + FastAPI | API `/api/v1` con los módulos del monolito; sirve la SPA compilada; aplica migraciones y datos iniciales al arrancar | 8000 |
 | SPA | React + Vite (en el navegador) | Interfaz por rol; login con Keycloak (PKCE) | servida por `app` |
 | Base de datos (`postgres`) | PostgreSQL 16.4 | Persiste turnos, inscripciones y configuración; bloqueo de fila para el cupo | ninguno (solo red interna) |
-| Proveedor de identidad (`keycloak`) | Keycloak 26.0 | Autentica y emite los tokens con los roles; realm versionado en `keycloak/` | 8080 |
+| Proveedor de identidad (`keycloak`) | Keycloak 26.0 | Autentica, emite los tokens con los roles y guarda las cuentas; realm versionado en `keycloak/`. La app lo usa además como cliente de servicio (`colonia-admin-api`) para gestionar las cuentas del personal | 8080 |
 | Padrón (`wiremock`) | WireMock 3.9.1 | Simula el padrón de residentes (residente, no residente y caído) | 8081 |
 | Documentación (`swagger-ui`) | Swagger UI 5.17 | Muestra el contrato `docs/openapi.yaml` y permite probar la API con login | 8082 |
 
@@ -317,6 +319,8 @@ en Swagger UI (http://localhost:8082). Versión en la ruta (`/api/v1`) y errores
 | GET / PUT | `/api/v1/admin/periodo-inscripcion` | administrador del sistema | Apertura y cierre de la inscripción |
 | GET / PUT | `/api/v1/admin/configuracion-temporada` | administrador del sistema | Temporada activa y rango de edades |
 | PUT | `/api/v1/admin/distribucion-cupos` | administrador del sistema | Repartir los 600 cupos entre los turnos (promueve si un turno gana cupos) |
+| GET / POST | `/api/v1/admin/usuarios` | administrador del sistema | Listar y registrar cuentas del personal (201 + `Location`; 409 si el usuario ya existe) |
+| GET / PUT | `/api/v1/admin/usuarios/{id}` | administrador del sistema | Ver y modificar una cuenta: datos, rol, baja o reactivación (409 si el cambio dejaría al sistema sin administradores) |
 
 ## 12. Despliegue
 
@@ -359,6 +363,7 @@ sobre el C4 de Contenedores. Cada riesgo termina en un ADR, una verificación o 
 | NFR-06 padrón caído (A, M) | REST sincrónico con ACL y timeout (ADR-004) | La disponibilidad de la inscripción depende de la del padrón | Regla siempre aplicada y respuesta inmediata, a costa de disponibilidad | Si el padrón se cae en la apertura, nadie se puede inscribir | Lo aceptamos: 503 con `Retry-After`, nadie pierde el lugar ya asignado y la inscripción dura 3 semanas. Verificado con el padrón detenido |
 | NFR-03 volver a levantarlo (A, M) | Compose con versiones fijas y valores por defecto (ADR-006) | Depende de que las imágenes sigan disponibles en los registros públicos | Reproducibilidad a cambio de no recibir parches solos | Una imagen con vulnerabilidades conocidas un año después; Keycloak en `start-dev` pierde los usuarios creados a mano | Actualizar las versiones a propósito antes de cada temporada; para producción, volumen o base para Keycloak y modo `start` (ADR-005) |
 | NFR-01 preparar la temporada (A, M) | Configuración de temporada desde el panel y reglas en `service.py` (ADR-002) | Depende de que nadie saltee las capas | Simplicidad a cambio de atar el dominio a SQLAlchemy | Erosión: que la regla de dependencias se rompa sin que nadie lo note | Fitness function de arquitectura en la verificación |
+| NFR-05 gestión de cuentas del personal (A, B) | Cliente de servicio con permisos mínimos sobre Keycloak (ADR-005) | Depende de que nadie más tenga el secreto del cliente de servicio | Administrar cuentas desde el panel, a costa de una credencial con permiso para gestionar usuarios | Si la app quedara comprometida, se podrían gestionar cuentas del realm | La app solo gestiona los dos roles del personal; secreto en el `.env`; nunca queda el sistema sin administradores |
 | NFR-05 acceso directo a la API (A, B) | Validación del JWT y `require_roles` en cada operación (ADR-005) | Depende de validar firma, emisor, audiencia y vencimiento en el backend | — | El período de inscripción hoy lo controla solo la SPA: la API acepta inscripciones fuera de fecha si se la llama directo | Mover el control del período al servicio de inscripciones (pendiente) |
 
 **No-riesgos:** la base sin puerto publicado (solo la ve la app); la consulta al padrón antes de bloquear

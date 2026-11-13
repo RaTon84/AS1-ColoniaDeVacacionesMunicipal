@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     keycloak_internal_url: str = "http://keycloak:8080/realms/colonia"
     keycloak_client_id: str = "colonia-spa"
     keycloak_audience: str = "colonia-api"
+    # Cliente de servicio con el que la app administra las cuentas del personal (API de administración de Keycloak).
+    keycloak_admin_client_id: str = "colonia-admin-api"
+    keycloak_admin_client_secret: str = "colonia_admin_demo_cambiar"
     auth_enabled: bool = True
     public_app_url: str = "http://localhost:8000"
     keycloak_public_url: str = "http://localhost:8080"

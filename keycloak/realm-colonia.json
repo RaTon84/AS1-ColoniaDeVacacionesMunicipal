@@ -8,7 +8,8 @@
     "es"
   ],
   "defaultLocale": "es",
-  "registrationAllowed": false,
+  "registrationAllowed": true,
+  "defaultRoles": ["tutor"],
   "loginWithEmailAllowed": true,
   "roles": {
     "realm": [

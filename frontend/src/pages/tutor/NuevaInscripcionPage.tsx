@@ -1,196 +1,194 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from "react";
 import {
   CalendarDays,
   UsersRound,
   UserRound,
   ArrowRight,
   Info,
-} from 'lucide-react'
+} from "lucide-react";
 
-import keycloak from '../../auth/keycloak'
-import { obtenerTurnos } from '../../services/turnos'
-import type { Turno } from '../../types/turno'
-import { crearInscripcion } from '../../services/inscripciones'
+import keycloak from "../../auth/keycloak";
+import { obtenerTurnos } from "../../services/turnos";
+import type { Turno } from "../../types/turno";
+import { crearInscripcion } from "../../services/inscripciones";
 
 interface FormularioInscripcion {
-  turno_id: string
-  dni_chico: string
-  nombre_chico: string
-  apellido_chico: string
-  fecha_nacimiento: string
-  dni_tutor: string
-  nombre_tutor: string
-  apellido_tutor: string
-  email_tutor: string
-  telefono_tutor: string
+  turno_id: string;
+  dni_chico: string;
+  nombre_chico: string;
+  apellido_chico: string;
+  fecha_nacimiento: string;
+  dni_tutor: string;
+  nombre_tutor: string;
+  apellido_tutor: string;
+  email_tutor: string;
+  telefono_tutor: string;
 }
 
 interface EstadoPeriodoInscripcion {
-  estado: 'sin_configurar' | 'pendiente' | 'cerrado' | 'abierto'
-  apertura: string | null
-  cierre: string | null
+  estado: "sin_configurar" | "pendiente" | "cerrado" | "abierto";
+  apertura: string | null;
+  cierre: string | null;
 }
 
 const datosIniciales: FormularioInscripcion = {
-  turno_id: '',
-  dni_chico: '',
-  nombre_chico: '',
-  apellido_chico: '',
-  fecha_nacimiento: '',
-  dni_tutor: '',
-  nombre_tutor: '',
-  apellido_tutor: '',
-  email_tutor: '',
-  telefono_tutor: '',
-}
+  turno_id: "",
+  dni_chico: "",
+  nombre_chico: "",
+  apellido_chico: "",
+  fecha_nacimiento: "",
+  dni_tutor: "",
+  nombre_tutor: "",
+  apellido_tutor: "",
+  email_tutor: "",
+  telefono_tutor: "",
+};
 
 const estiloInput =
-  'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+  "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 
 function NuevaInscripcionPage() {
-  const [formulario, setFormulario] = useState<FormularioInscripcion>(datosIniciales)
-  const [periodo, setPeriodo] = useState<EstadoPeriodoInscripcion | null>(null)
-  const [turnos, setTurnos] = useState<Turno[]>([])
-  const [cargandoTurnos, setCargandoTurnos] = useState(true)
-  const [errorTurnos, setErrorTurnos] = useState('')
-  const [enviando, setEnviando] = useState(false)
-  const [errorInscripcion, setErrorInscripcion] = useState('')
-  const [mensajeExito, setMensajeExito] = useState('')
+  const [formulario, setFormulario] = useState<FormularioInscripcion>(() => ({
+    ...datosIniciales,
+    nombre_tutor: keycloak.tokenParsed?.given_name ?? "",
+    apellido_tutor: keycloak.tokenParsed?.family_name ?? "",
+    email_tutor: keycloak.tokenParsed?.email ?? "",
+  }));
+  const [periodo, setPeriodo] = useState<EstadoPeriodoInscripcion | null>(null);
+  const [turnos, setTurnos] = useState<Turno[]>([]);
+  const [cargandoTurnos, setCargandoTurnos] = useState(true);
+  const [errorTurnos, setErrorTurnos] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [errorInscripcion, setErrorInscripcion] = useState("");
+  const [mensajeExito, setMensajeExito] = useState("");
 
   useEffect(() => {
-    let activo = true
+    let activo = true;
 
     async function cargarTurnos() {
       try {
-        await keycloak.updateToken(30)
+        await keycloak.updateToken(30);
 
         if (!keycloak.token) {
-          throw new Error('No hay una sesión activa. Volvé a iniciar sesión.')
+          throw new Error("No hay una sesión activa. Volvé a iniciar sesión.");
         }
 
-        const respuesta = await fetch('/api/v1/periodo-inscripcion', {
+        const respuesta = await fetch("/api/v1/periodo-inscripcion", {
           headers: {
             Authorization: `Bearer ${keycloak.token}`,
           },
-          cache: 'no-store',
-        })
+          cache: "no-store",
+        });
 
         if (!respuesta.ok) {
-          throw new Error('No se pudo verificar el período de inscripción.')
+          throw new Error("No se pudo verificar el período de inscripción.");
         }
 
-        const periodoActual: EstadoPeriodoInscripcion = await respuesta.json()
+        const periodoActual: EstadoPeriodoInscripcion = await respuesta.json();
 
-        if (!activo) return
+        if (!activo) return;
 
-        setPeriodo(periodoActual)
+        setPeriodo(periodoActual);
 
-        if (periodoActual.estado !== 'abierto') return
+        if (periodoActual.estado !== "abierto") return;
 
-        const datos = await obtenerTurnos(keycloak.token)
+        const datos = await obtenerTurnos(keycloak.token);
 
         if (activo) {
-          setTurnos(datos)
+          setTurnos(datos);
         }
       } catch (error) {
         if (activo) {
           setErrorTurnos(
             error instanceof Error
               ? error.message
-              : 'No se pudieron cargar los turnos'
-          )
+              : "No se pudieron cargar los turnos",
+          );
         }
       } finally {
         if (activo) {
-          setCargandoTurnos(false)
+          setCargandoTurnos(false);
         }
       }
     }
 
-    void cargarTurnos()
+    void cargarTurnos();
 
     return () => {
-      activo = false
-    }
-  }, [])
+      activo = false;
+    };
+  }, []);
 
   useEffect(() => {
-    if (periodo?.estado !== 'abierto' || cargandoTurnos) return
+    if (periodo?.estado !== "abierto" || cargandoTurnos) return;
 
-    let activo = true
-    let temporizador: number | undefined
+    let activo = true;
+    let temporizador: number | undefined;
 
     async function actualizarDisponibilidad() {
       try {
-        await keycloak.updateToken(30)
+        await keycloak.updateToken(30);
 
         if (!keycloak.token) {
-          throw new Error('No hay una sesión activa. Volvé a iniciar sesión.')
+          throw new Error("No hay una sesión activa. Volvé a iniciar sesión.");
         }
 
-        const datos = await obtenerTurnos(keycloak.token)
+        const datos = await obtenerTurnos(keycloak.token);
 
         if (activo) {
-          setTurnos(datos)
-          setErrorTurnos('')
+          setTurnos(datos);
+          setErrorTurnos("");
         }
       } catch (error) {
         if (activo) {
           setErrorTurnos(
             error instanceof Error
               ? error.message
-              : 'No se pudieron actualizar los cupos.'
-          )
+              : "No se pudieron actualizar los cupos.",
+          );
         }
       } finally {
         if (activo) {
-          temporizador = window.setTimeout(actualizarDisponibilidad, 10_000)
+          temporizador = window.setTimeout(actualizarDisponibilidad, 10_000);
         }
       }
     }
 
-    temporizador = window.setTimeout(actualizarDisponibilidad, 10_000)
+    temporizador = window.setTimeout(actualizarDisponibilidad, 10_000);
 
     return () => {
-      activo = false
-      window.clearTimeout(temporizador)
-    }
-  }, [periodo?.estado, cargandoTurnos])
+      activo = false;
+      window.clearTimeout(temporizador);
+    };
+  }, [periodo?.estado, cargandoTurnos]);
 
-  function actualizarCampo(
-    campo: keyof FormularioInscripcion,
-    valor: string
-  ) {
+  function actualizarCampo(campo: keyof FormularioInscripcion, valor: string) {
     setFormulario((anterior) => ({
       ...anterior,
       [campo]: valor,
-    }))
+    }));
   }
 
-  async function manejarEnvio(
-    evento: FormEvent<HTMLFormElement>
-  ) {
-    evento.preventDefault()
+  async function manejarEnvio(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
 
-    if (enviando || mensajeExito) return
+    if (enviando || mensajeExito) return;
 
-    setErrorInscripcion('')
-    setMensajeExito('')
+    setErrorInscripcion("");
+    setMensajeExito("");
 
     if (!formulario.turno_id) {
-      setErrorInscripcion('Seleccioná un turno.')
-      return
+      setErrorInscripcion("Seleccioná un turno.");
+      return;
     }
 
-    setEnviando(true)
+    setEnviando(true);
 
     try {
-      await keycloak.updateToken(30)
+      await keycloak.updateToken(30);
 
       if (!keycloak.token) {
-        throw new Error(
-          'No hay una sesión activa. Volvé a iniciar sesión.'
-        )
+        throw new Error("No hay una sesión activa. Volvé a iniciar sesión.");
       }
 
       const resultado = await crearInscripcion(
@@ -198,69 +196,66 @@ function NuevaInscripcionPage() {
           ...formulario,
           turno_id: Number(formulario.turno_id),
         },
-        keycloak.token
-      )
+        keycloak.token,
+      );
 
-      if (resultado.estado === 'CONFIRMADA') {
-        setMensajeExito(
-          `Inscripción N.º ${resultado.id} confirmada.`
-        )
-      } else if (resultado.estado === 'LISTA_ESPERA') {
+      if (resultado.estado === "CONFIRMADA") {
+        setMensajeExito(`Inscripción N.º ${resultado.id} confirmada.`);
+      } else if (resultado.estado === "LISTA_ESPERA") {
         setMensajeExito(
           `Inscripción N.º ${resultado.id} en lista de espera. ` +
-          `Posición: ${resultado.posicion_espera}.`
-        )
+            `Posición: ${resultado.posicion_espera}.`,
+        );
       }
     } catch (error) {
       setErrorInscripcion(
         error instanceof Error
           ? error.message
-          : 'No se pudo registrar la inscripción.'
-      )
+          : "No se pudo registrar la inscripción.",
+      );
     } finally {
-      setEnviando(false)
+      setEnviando(false);
     }
   }
 
   return (
     <main className="min-h-screen bg-transparent px-5 py-8 lg:px-10">
       <div className="mx-auto max-w-5xl">
-
         <header className="mb-8">
           <h1 className="text-3xl font-extrabold text-[#142D50]">
             Nueva inscripción
           </h1>
 
           <p className="mt-2 text-slate-600">
-            Completá los datos para solicitar un cupo en la
-            colonia de vacaciones municipal.
+            Completá los datos para solicitar un cupo en la colonia de
+            vacaciones municipal.
           </p>
         </header>
 
-        {periodo?.estado !== 'abierto' && (
-          <p role="status" className="rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-            {periodo?.estado === 'pendiente' && periodo.apertura
-              ? `Las inscripciones abren el ${new Date(periodo.apertura).toLocaleString(
-                  'es-AR',
-                  {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                    timeZone: 'America/Argentina/Buenos_Aires',
-                  }
-                )} (hora argentina).`
-              : periodo?.estado === 'cerrado'
-                ? 'El período de inscripción ya cerró.'
-                : periodo?.estado === 'sin_configurar'
-                  ? 'El período de inscripción todavía no fue configurado.'
-                  : errorTurnos || 'Consultando el período de inscripción…'}
+        {periodo?.estado !== "abierto" && (
+          <p
+            role="status"
+            className="rounded-xl bg-blue-50 p-4 text-sm text-blue-800"
+          >
+            {periodo?.estado === "pendiente" && periodo.apertura
+              ? `Las inscripciones abren el ${new Date(
+                  periodo.apertura,
+                ).toLocaleString("es-AR", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                  timeZone: "America/Argentina/Buenos_Aires",
+                })} (hora argentina).`
+              : periodo?.estado === "cerrado"
+                ? "El período de inscripción ya cerró."
+                : periodo?.estado === "sin_configurar"
+                  ? "El período de inscripción todavía no fue configurado."
+                  : errorTurnos || "Consultando el período de inscripción…"}
           </p>
         )}
 
-        {periodo?.estado === 'abierto' && (
+        {periodo?.estado === "abierto" && (
           <form onSubmit={manejarEnvio} className="space-y-6">
-
             <section className="rounded-2xl bg-white p-6 shadow-sm">
-
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
                   <CalendarDays size={24} />
@@ -286,33 +281,29 @@ function NuevaInscripcionPage() {
               <select
                 id="turno"
                 value={formulario.turno_id}
-                onChange={(e) =>
-                  actualizarCampo('turno_id', e.target.value)
-                }
+                onChange={(e) => actualizarCampo("turno_id", e.target.value)}
                 className={estiloInput}
                 required
                 disabled={
-                  cargandoTurnos ||
-                  Boolean(errorTurnos) ||
-                  turnos.length === 0
+                  cargandoTurnos || Boolean(errorTurnos) || turnos.length === 0
                 }
               >
                 <option value="">
                   {cargandoTurnos
-                    ? 'Cargando turnos...'
+                    ? "Cargando turnos..."
                     : errorTurnos
-                      ? 'No se pudieron cargar los turnos'
+                      ? "No se pudieron cargar los turnos"
                       : turnos.length === 0
-                        ? 'No hay turnos habilitados'
-                        : 'Seleccioná un turno'}
+                        ? "No hay turnos habilitados"
+                        : "Seleccioná un turno"}
                 </option>
 
                 {turnos.map((turno) => (
                   <option key={turno.id} value={turno.id}>
-                    {turno.nombre} · {turno.sede} ·{' '}
+                    {turno.nombre} · {turno.sede} ·{" "}
                     {turno.cupos_disponibles > 0
                       ? `${turno.cupos_disponibles} cupos disponibles`
-                      : 'Lista de espera'}
+                      : "Lista de espera"}
                   </option>
                 ))}
               </select>
@@ -326,15 +317,13 @@ function NuevaInscripcionPage() {
               <div className="mt-4 flex gap-2 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
                 <Info size={20} className="shrink-0" />
                 <p>
-                  Si el turno está completo, la solicitud ingresará
-                  a la lista de espera.
+                  Si el turno está completo, la solicitud ingresará a la lista
+                  de espera.
                 </p>
               </div>
-
             </section>
 
             <section className="rounded-2xl bg-white p-6 shadow-sm">
-
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-xl bg-emerald-100 p-3 text-emerald-700">
                   <UsersRound size={24} />
@@ -351,7 +340,6 @@ function NuevaInscripcionPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
                 <div>
                   <label
                     htmlFor="nombre_chico"
@@ -368,7 +356,7 @@ function NuevaInscripcionPage() {
                     required
                     value={formulario.nombre_chico}
                     onChange={(e) =>
-                      actualizarCampo('nombre_chico', e.target.value)
+                      actualizarCampo("nombre_chico", e.target.value)
                     }
                     className={estiloInput}
                     placeholder="Nombre"
@@ -391,7 +379,7 @@ function NuevaInscripcionPage() {
                     required
                     value={formulario.apellido_chico}
                     onChange={(e) =>
-                      actualizarCampo('apellido_chico', e.target.value)
+                      actualizarCampo("apellido_chico", e.target.value)
                     }
                     className={estiloInput}
                     placeholder="Apellido"
@@ -414,7 +402,7 @@ function NuevaInscripcionPage() {
                     required
                     value={formulario.dni_chico}
                     onChange={(e) =>
-                      actualizarCampo('dni_chico', e.target.value)
+                      actualizarCampo("dni_chico", e.target.value)
                     }
                     className={estiloInput}
                     placeholder="DNI sin puntos"
@@ -433,20 +421,18 @@ function NuevaInscripcionPage() {
                     id="fecha_nacimiento"
                     type="date"
                     required
-                    max={new Date().toLocaleDateString('en-CA')}
+                    max={new Date().toLocaleDateString("en-CA")}
                     value={formulario.fecha_nacimiento}
                     onChange={(e) =>
-                      actualizarCampo('fecha_nacimiento', e.target.value)
+                      actualizarCampo("fecha_nacimiento", e.target.value)
                     }
                     className={estiloInput}
                   />
                 </div>
-
               </div>
             </section>
 
             <section className="rounded-2xl bg-white p-6 shadow-sm">
-
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-xl bg-violet-100 p-3 text-violet-700">
                   <UserRound size={24} />
@@ -463,7 +449,6 @@ function NuevaInscripcionPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
                 <div>
                   <label
                     htmlFor="nombre_tutor"
@@ -475,15 +460,9 @@ function NuevaInscripcionPage() {
                   <input
                     id="nombre_tutor"
                     type="text"
-                    minLength={2}
-                    maxLength={120}
-                    required
                     value={formulario.nombre_tutor}
-                    onChange={(e) =>
-                      actualizarCampo('nombre_tutor', e.target.value)
-                    }
-                    className={estiloInput}
-                    placeholder="Nombre"
+                    disabled
+                    className={`${estiloInput} disabled:cursor-not-allowed disabled:bg-slate-100`}
                   />
                 </div>
 
@@ -498,15 +477,9 @@ function NuevaInscripcionPage() {
                   <input
                     id="apellido_tutor"
                     type="text"
-                    minLength={2}
-                    maxLength={120}
-                    required
                     value={formulario.apellido_tutor}
-                    onChange={(e) =>
-                      actualizarCampo('apellido_tutor', e.target.value)
-                    }
-                    className={estiloInput}
-                    placeholder="Apellido"
+                    disabled
+                    className={`${estiloInput} disabled:cursor-not-allowed disabled:bg-slate-100`}
                   />
                 </div>
 
@@ -526,7 +499,7 @@ function NuevaInscripcionPage() {
                     required
                     value={formulario.dni_tutor}
                     onChange={(e) =>
-                      actualizarCampo('dni_tutor', e.target.value)
+                      actualizarCampo("dni_tutor", e.target.value)
                     }
                     className={estiloInput}
                     placeholder="DNI sin puntos"
@@ -547,7 +520,7 @@ function NuevaInscripcionPage() {
                     required
                     value={formulario.email_tutor}
                     onChange={(e) =>
-                      actualizarCampo('email_tutor', e.target.value)
+                      actualizarCampo("email_tutor", e.target.value)
                     }
                     className={estiloInput}
                     placeholder="correo@ejemplo.com"
@@ -570,20 +543,16 @@ function NuevaInscripcionPage() {
                     required
                     value={formulario.telefono_tutor}
                     onChange={(e) =>
-                      actualizarCampo('telefono_tutor', e.target.value)
+                      actualizarCampo("telefono_tutor", e.target.value)
                     }
                     className={estiloInput}
                     placeholder="Teléfono de contacto"
                   />
                 </div>
-
               </div>
             </section>
             {errorInscripcion && (
-              <p
-                role="alert"
-                className="rounded-xl bg-red-50 p-4 text-red-700"
-              >
+              <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-700">
                 {errorInscripcion}
               </p>
             )}
@@ -609,16 +578,15 @@ function NuevaInscripcionPage() {
                 }
                 className="flex items-center gap-2 rounded-xl bg-blue-700 px-6 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
               >
-                {enviando ? 'Registrando...' : 'Solicitar inscripción'}
+                {enviando ? "Registrando..." : "Solicitar inscripción"}
                 <ArrowRight size={20} />
               </button>
             </div>
-
           </form>
         )}
       </div>
     </main>
-  )
+  );
 }
 
-export default NuevaInscripcionPage
+export default NuevaInscripcionPage;

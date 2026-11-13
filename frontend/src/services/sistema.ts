@@ -78,3 +78,24 @@ export async function guardarPeriodoInscripcion(
 
   return respuesta.json()
 }
+
+interface ConfiguracionTemporada {
+  temporada: number
+  edad_minima: number
+  edad_maxima: number
+}
+
+export async function obtenerConfiguracionTemporada(
+  token: string
+): Promise<ConfiguracionTemporada> {
+  const respuesta = await fetch('/api/v1/admin/configuracion-temporada', {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  })
+
+  if (!respuesta.ok) {
+    throw new Error('No se pudo cargar la configuración de la temporada.')
+  }
+
+  return respuesta.json()
+}

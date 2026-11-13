@@ -142,3 +142,26 @@ export async function obtenerMisInscripciones(
 
   return await respuesta.json()
 }
+
+export interface EstadoPeriodoInscripcion {
+  estado: 'sin_configurar' | 'pendiente' | 'cerrado' | 'abierto'
+  apertura: string | null
+  cierre: string | null
+}
+
+export async function obtenerEstadoPeriodoInscripcion(
+  token: string
+): Promise<EstadoPeriodoInscripcion> {
+  const respuesta = await fetch('/api/v1/periodo-inscripcion', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: 'no-store',
+  })
+
+  if (!respuesta.ok) {
+    throw new Error('No se pudo verificar el período de inscripción.')
+  }
+
+  return respuesta.json()
+}

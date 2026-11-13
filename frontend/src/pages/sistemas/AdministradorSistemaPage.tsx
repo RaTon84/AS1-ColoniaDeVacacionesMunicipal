@@ -12,13 +12,12 @@ import {
   KeyRound,
   Info,
   CheckCircle2,
-  ClipboardList,
-  UserCog,
   CalendarCog,
 } from "lucide-react";
 import keycloak from "../../auth/keycloak";
 import {
   guardarPeriodoInscripcion,
+  obtenerConfiguracionTemporada,
   obtenerEstadoSistema,
   obtenerPeriodoInscripcion,
   type PeriodoInscripcion,
@@ -31,12 +30,6 @@ const MAX_CUPOS_TEMPORADA = 600;
 const urlConfiguracion = "/api/v1/admin/configuracion-temporada";
 
 type TurnoEditable = Turno & { cupoEditable: string };
-
-interface ConfiguracionTemporada {
-  temporada: number;
-  edad_minima: number;
-  edad_maxima: number;
-}
 
 const servicios = [
   {
@@ -64,29 +57,6 @@ const servicios = [
     icono: ShieldCheck,
   },
 ] as const;
-
-const perfiles = [
-  {
-    nombre: "Tutor",
-    descripcion: "Realiza inscripciones y consulta sus solicitudes.",
-    icono: UsersRound,
-    color: "bg-blue-100 text-blue-700",
-  },
-  {
-    nombre: "Administrativo",
-    descripcion:
-      "Consulta inscripciones y atiende las solicitudes que requieren revisión.",
-    icono: ClipboardList,
-    color: "bg-emerald-100 text-emerald-700",
-  },
-  {
-    nombre: "Administrador de Sistemas",
-    descripcion:
-      "Supervisa la aplicación y administra la configuración técnica autorizada.",
-    icono: UserCog,
-    color: "bg-violet-100 text-violet-700",
-  },
-];
 
 function AdministracionSistemaPage() {
   const mostrarEstado = Boolean(useMatch("/sistemas/estado"));
@@ -215,16 +185,7 @@ function AdministracionSistemaPage() {
           throw new Error("Volvé a iniciar sesión.");
         }
 
-        const respuesta = await fetch(urlConfiguracion, {
-          headers: { Authorization: `Bearer ${keycloak.token}` },
-          cache: "no-store",
-        });
-
-        if (!respuesta.ok) {
-          throw new Error("No se pudo cargar la configuración de la temporada.");
-        }
-
-        const datos: ConfiguracionTemporada = await respuesta.json();
+        const datos = await obtenerConfiguracionTemporada(keycloak.token);
 
         if (activo) {
           setTemporadaGuardada(datos.temporada);
@@ -937,54 +898,6 @@ function AdministracionSistemaPage() {
           hidden={!mostrarPerfiles}
           className="rounded-2xl bg-white p-5 shadow-sm sm:p-6"
         >
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-xl bg-violet-100 p-3 text-violet-700">
-              <ShieldCheck size={25} />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold text-[#142D50]">
-                Usuarios y perfiles
-              </h2>
-              <p className="text-sm text-slate-500">
-                Responsabilidades de los tres perfiles definidos.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {perfiles.map((perfil) => {
-              const Icono = perfil.icono;
-
-              return (
-                <article
-                  key={perfil.nombre}
-                  className="flex items-start gap-4 rounded-xl border border-slate-200 p-4"
-                >
-                  <div className={`shrink-0 rounded-xl p-3 ${perfil.color}`}>
-                    <Icono size={23} />
-                  </div>
-
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-[#142D50]">
-                      {perfil.nombre}
-                    </h3>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                      {perfil.descripcion}
-                    </p>
-                  </div>
-
-                  <CheckCircle2
-                    size={19}
-                    className="ml-auto shrink-0 text-slate-300"
-                    aria-hidden="true"
-                  />
-                </article>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 border-t border-slate-200 pt-6">
             <h2 className="text-xl font-bold text-[#142D50]">
               Cuentas del personal municipal
             </h2>
@@ -992,7 +905,6 @@ function AdministracionSistemaPage() {
               Alta, baja y cambio de rol de administrativos y administradores del sistema.
             </p>
             <GestionUsuarios />
-          </div>
         </section>
       </div>
     </main>

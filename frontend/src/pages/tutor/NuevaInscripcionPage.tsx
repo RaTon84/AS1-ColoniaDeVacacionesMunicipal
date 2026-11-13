@@ -10,7 +10,11 @@ import {
 import keycloak from "../../auth/keycloak";
 import { obtenerTurnos } from "../../services/turnos";
 import type { Turno } from "../../types/turno";
-import { crearInscripcion } from "../../services/inscripciones";
+import {
+  crearInscripcion,
+  obtenerEstadoPeriodoInscripcion,
+  type EstadoPeriodoInscripcion,
+} from "../../services/inscripciones";
 
 interface FormularioInscripcion {
   turno_id: string;
@@ -23,12 +27,6 @@ interface FormularioInscripcion {
   apellido_tutor: string;
   email_tutor: string;
   telefono_tutor: string;
-}
-
-interface EstadoPeriodoInscripcion {
-  estado: "sin_configurar" | "pendiente" | "cerrado" | "abierto";
-  apertura: string | null;
-  cierre: string | null;
 }
 
 const datosIniciales: FormularioInscripcion = {
@@ -48,12 +46,19 @@ const estiloInput =
   "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 
 function NuevaInscripcionPage() {
-  const [formulario, setFormulario] = useState<FormularioInscripcion>(() => ({
-    ...datosIniciales,
-    nombre_tutor: keycloak.tokenParsed?.given_name ?? "",
-    apellido_tutor: keycloak.tokenParsed?.family_name ?? "",
-    email_tutor: keycloak.tokenParsed?.email ?? "",
-  }));
+  const esAdministrativo = keycloak.hasRealmRole("administrativo");
+  const [formulario, setFormulario] = useState<FormularioInscripcion>(() => {
+    if (esAdministrativo) {
+      return { ...datosIniciales };
+    }
+
+    return {
+      ...datosIniciales,
+      nombre_tutor: keycloak.tokenParsed?.given_name ?? "",
+      apellido_tutor: keycloak.tokenParsed?.family_name ?? "",
+      email_tutor: keycloak.tokenParsed?.email ?? "",
+    };
+  });
   const [periodo, setPeriodo] = useState<EstadoPeriodoInscripcion | null>(null);
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [cargandoTurnos, setCargandoTurnos] = useState(true);
@@ -73,18 +78,7 @@ function NuevaInscripcionPage() {
           throw new Error("No hay una sesión activa. Volvé a iniciar sesión.");
         }
 
-        const respuesta = await fetch("/api/v1/periodo-inscripcion", {
-          headers: {
-            Authorization: `Bearer ${keycloak.token}`,
-          },
-          cache: "no-store",
-        });
-
-        if (!respuesta.ok) {
-          throw new Error("No se pudo verificar el período de inscripción.");
-        }
-
-        const periodoActual: EstadoPeriodoInscripcion = await respuesta.json();
+        const periodoActual = await obtenerEstadoPeriodoInscripcion(keycloak.token);
 
         if (!activo) return;
 
@@ -461,7 +455,9 @@ function NuevaInscripcionPage() {
                     id="nombre_tutor"
                     type="text"
                     value={formulario.nombre_tutor}
-                    disabled
+                    onChange={(e) => actualizarCampo("nombre_tutor", e.target.value)}
+                    disabled={!esAdministrativo}
+                    required={esAdministrativo}
                     className={`${estiloInput} disabled:cursor-not-allowed disabled:bg-slate-100`}
                   />
                 </div>
@@ -478,7 +474,9 @@ function NuevaInscripcionPage() {
                     id="apellido_tutor"
                     type="text"
                     value={formulario.apellido_tutor}
-                    disabled
+                    onChange={(e) => actualizarCampo("apellido_tutor", e.target.value)}
+                    disabled={!esAdministrativo}
+                    required={esAdministrativo}
                     className={`${estiloInput} disabled:cursor-not-allowed disabled:bg-slate-100`}
                   />
                 </div>

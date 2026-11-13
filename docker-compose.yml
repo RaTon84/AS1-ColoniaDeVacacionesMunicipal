@@ -1,8 +1,10 @@
 
-# Levanta todo el sistema con un solo comando:  docker compose up --build
-# Cada variable tiene un valor por defecto, así que no hace falta crear un .env.
-# Para cambiar algún valor, copiar .env.example como .env y editarlo.
-# Las imágenes tienen versión fija para que dentro de un año levante igual que hoy.
+# Levanta todo el sistema con:
+# docker compose up --build
+#
+# Las variables tienen valores predeterminados para desarrollo.
+# Para personalizarlas, copiar .env.example como .env.
+# Las imágenes utilizan versiones fijas.
 
 services:
   postgres:
@@ -14,12 +16,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test:
+        - CMD-SHELL
+        - pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
       interval: 5s
       timeout: 5s
       retries: 20
 
-  # Proveedor de identidad (OIDC). El realm con roles y usuarios demo se importa solo al arrancar.
+  # Proveedor de identidad OIDC.
+  # Importa el realm cuando todavía no existe.
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.0
     command: ["start-dev", "--import-realm"]
@@ -27,12 +32,29 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin_demo_cambiar}
     volumes:
-    - ./keycloak/realm-colonia.json:/opt/keycloak/data/import/realm-colonia.json:ro
-    - ./keycloak/themes:/opt/keycloak/themes:ro
+      - ./keycloak/realm-colonia.json:/opt/keycloak/data/import/realm-colonia.json:ro
+      - ./keycloak/themes:/opt/keycloak/themes:ro
     ports:
       - "8080:8080"
 
-  # Mock del padrón de residentes (sistema externo simulado). Respuestas en wiremock/mappings.
+  # Inicialización idempotente de Keycloak.
+  # Sincroniza el cliente de servicio y sus permisos
+  # incluso cuando el realm ya existe.
+  keycloak-init:
+    image: quay.io/keycloak/keycloak:26.0.0
+    entrypoint: ["/bin/sh", "/opt/keycloak/init/init-keycloak.sh"]
+    environment:
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin_demo_cambiar}
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-colonia_admin_demo_cambiar}
+    volumes:
+      - ./keycloak/init-keycloak.sh:/opt/keycloak/init/init-keycloak.sh:ro
+    depends_on:
+      keycloak:
+        condition: service_started
+    restart: "no"
+
+  # Mock del padrón municipal de residentes.
   wiremock:
     image: wiremock/wiremock:3.9.1
     command: ["--global-response-templating", "--verbose"]
@@ -41,7 +63,9 @@ services:
     ports:
       - "8081:8080"
 
-  # Backend FastAPI (y, desde el issue #3, el frontend compilado). Al arrancar aplica migraciones y datos iniciales.
+  # Backend FastAPI.
+  # Aplica migraciones y datos iniciales al arrancar.
+  # Espera a que keycloak-init termine correctamente.
   app:
     build:
       context: .
@@ -51,24 +75,31 @@ services:
       PADRON_BASE_URL: http://wiremock:8080
       PADRON_TIMEOUT_SECONDS: ${PADRON_TIMEOUT_SECONDS:-3}
       TEMPORADA: ${TEMPORADA:-2027}
+
       KEYCLOAK_ISSUER_URL: http://localhost:8080/realms/colonia
       KEYCLOAK_INTERNAL_URL: http://keycloak:8080/realms/colonia
       KEYCLOAK_CLIENT_ID: colonia-spa
+
+      KEYCLOAK_ADMIN_CLIENT_ID: colonia-admin-api
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-colonia_admin_demo_cambiar}
+
       KEYCLOAK_PUBLIC_URL: http://localhost:8080
       PUBLIC_APP_URL: http://localhost:8000
       AUTH_ENABLED: "true"
+
     depends_on:
       postgres:
         condition: service_healthy
-      keycloak:
-        condition: service_started
+      keycloak-init:
+        condition: service_completed_successfully
       wiremock:
         condition: service_started
+
     ports:
       - "8000:8000"
     restart: unless-stopped
-  
-    # Documentación interactiva generada desde el contrato OpenAPI (contract-first).
+
+  # Documentación interactiva del contrato OpenAPI.
   swagger-ui:
     image: swaggerapi/swagger-ui:v5.17.14
     environment:
@@ -81,6 +112,18 @@ services:
     ports:
       - "8082:8080"
 
+  # Verificación de NFRs.
+  # Se ejecuta únicamente con el perfil "verificacion".
+  verificador:
+    image: python:3.12.7-slim-bookworm
+    profiles: ["verificacion"]
+    network_mode: "service:keycloak"
+    entrypoint: ["python", "/verificacion/verificar.py"]
+    volumes:
+      - ./verificacion:/verificacion
+      - ./backend:/backend:ro
+    depends_on:
+      - app
+
 volumes:
   postgres_data:
-

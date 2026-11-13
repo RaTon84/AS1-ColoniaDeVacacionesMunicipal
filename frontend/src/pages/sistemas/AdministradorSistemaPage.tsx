@@ -24,6 +24,7 @@ import {
   type PeriodoInscripcion,
 } from "../../services/sistema";
 import { obtenerTurnos } from "../../services/turnos";
+import GestionUsuarios from "./GestionUsuarios";
 import type { Turno } from "../../types/turno";
 
 const MAX_CUPOS_TEMPORADA = 600;
@@ -943,7 +944,7 @@ function AdministracionSistemaPage() {
 
             <div>
               <h2 className="text-xl font-bold text-[#142D50]">
-                Perfiles del sistema
+                Usuarios y perfiles
               </h2>
               <p className="text-sm text-slate-500">
                 Responsabilidades de los tres perfiles definidos.
@@ -983,10 +984,15 @@ function AdministracionSistemaPage() {
             })}
           </div>
 
-          <p className="mt-5 text-sm text-slate-500">
-            La autenticación y asignación real de roles se integrará mediante
-            Keycloak.
-          </p>
+          <div className="mt-8 border-t border-slate-200 pt-6">
+            <h2 className="text-xl font-bold text-[#142D50]">
+              Cuentas del personal municipal
+            </h2>
+            <p className="mb-5 mt-1 text-sm text-slate-500">
+              Alta, baja y cambio de rol de administrativos y administradores del sistema.
+            </p>
+            <GestionUsuarios />
+          </div>
         </section>
       </div>
     </main>

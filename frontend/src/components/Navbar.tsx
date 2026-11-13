@@ -69,7 +69,7 @@ function Navbar() {
       roles: ['administrador_sistema'],
     },
     {
-      nombre: 'Perfiles',
+      nombre: 'Usuarios y perfiles',
       ruta: '/sistemas/perfiles',
       icono: UsersRound,
       roles: ['administrador_sistema'],

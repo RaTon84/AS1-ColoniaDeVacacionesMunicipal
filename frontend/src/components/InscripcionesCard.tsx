@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock3,
+  Pencil,
 } from "lucide-react";
 
 import type { Inscripcion } from "../data/inscripcionesEjemplo";
@@ -13,6 +14,7 @@ import type { Inscripcion } from "../data/inscripcionesEjemplo";
 interface InscripcionesCardProps {
   inscripcion: Inscripcion;
   onCancelar?: (inscripcion: Inscripcion) => Promise<void>;
+  onEditar?: (inscripcion: Inscripcion) => void;
   cancelando?: boolean;
 }
 
@@ -41,18 +43,22 @@ function DatoDetalle({ etiqueta, valor }: DatoDetalleProps) {
 function InscripcionesCard({
   inscripcion,
   onCancelar,
+  onEditar,
   cancelando = false,
 }: InscripcionesCardProps) {
   const [expandida, setExpandida] = useState(false);
 
   const confirmada = inscripcion.estado === "Confirmada";
   const enEspera = inscripcion.estado === "Lista de espera";
+  const cancelada = inscripcion.estado === "Cancelada";
 
   const estiloEstado = confirmada
     ? "bg-emerald-100 text-emerald-700"
     : enEspera
       ? "bg-violet-100 text-violet-700"
-      : "bg-amber-100 text-amber-700";
+      : cancelada
+        ? "bg-red-100 text-red-700"
+        : "bg-amber-100 text-amber-700";
 
   return (
     <article className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-md">
@@ -103,6 +109,16 @@ function InscripcionesCard({
 
             {expandida ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
+          {onEditar && (confirmada || enEspera) && (
+            <button
+              type="button"
+              onClick={() => onEditar(inscripcion)}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              <Pencil size={16} aria-hidden="true" />
+              Editar datos
+            </button>
+          )}
           {onCancelar && (confirmada || enEspera) && (
             <button
               type="button"

@@ -6,6 +6,7 @@ import {
   Plus,
   Info,
   CalendarDays,
+  RefreshCw,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -181,41 +182,74 @@ function GestionInscripcionPage() {
   >([]);
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [actualizando, setActualizando] = useState(false);
+  const [recarga, setRecarga] = useState(0);
+  const [actualizadoEn, setActualizadoEn] = useState<Date | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function cargarInscripciones() {
-      try {
-        setCargando(true);
-        setError("");
+    let activo = true;
 
+    async function cargar() {
+      setActualizando(true);
+      setError("");
+
+      try {
         await keycloak.updateToken(30);
 
         if (!keycloak.token) {
           throw new Error("No hay una sesión activa.");
         }
 
-      const [datosInscripciones, datosTurnos] = await Promise.all([
-        obtenerInscripcionesRegistradas(keycloak.token),
-        obtenerTurnos(keycloak.token),
-      ]);
+        const [datosInscripciones, datosTurnos] = await Promise.all([
+          obtenerInscripcionesRegistradas(keycloak.token),
+          obtenerTurnos(keycloak.token),
+        ]);
 
-      setInscripciones(datosInscripciones);
-      setTurnos(datosTurnos);
+        if (!activo) return;
 
+        setInscripciones(datosInscripciones);
+        setTurnos(datosTurnos);
+        setActualizadoEn(new Date());
       } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "No se pudieron cargar las inscripciones",
-        );
+        if (activo) {
+          setError(
+            error instanceof Error
+              ? error.message
+              : "No se pudieron cargar las inscripciones",
+          );
+        }
       } finally {
-        setCargando(false);
+        if (activo) {
+          setCargando(false);
+          setActualizando(false);
+        }
       }
     }
 
-    cargarInscripciones();
-  }, []);
+    void cargar();
+
+    // Refresca solo con la pestaña visible para no golpear la API en segundo plano.
+    const intervalo = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void cargar();
+      }
+    }, 30_000);
+
+    const alVolverALaPestana = () => {
+      if (document.visibilityState === "visible") {
+        void cargar();
+      }
+    };
+
+    document.addEventListener("visibilitychange", alVolverALaPestana);
+
+    return () => {
+      activo = false;
+      window.clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", alVolverALaPestana);
+    };
+  }, [recarga]);
 
   const total = inscripciones.length;
 
@@ -243,15 +277,38 @@ function GestionInscripcionPage() {
             <p className="mt-2 text-slate-600">
               Consultá las inscripciones y la disponibilidad de cupos.
             </p>
+
+            {actualizadoEn && (
+              <p className="mt-1 text-xs text-slate-500">
+                Última actualización:{" "}
+                {actualizadoEn.toLocaleTimeString("es-AR")}
+              </p>
+            )}
           </div>
 
-          <Link
-            to="/inscripciones/nueva"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1769B3] px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-800"
-          >
-            <Plus size={19} />
-            Nueva inscripción
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setRecarga((anterior) => anterior + 1)}
+              disabled={actualizando}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCw
+                size={18}
+                className={actualizando ? "animate-spin" : undefined}
+                aria-hidden="true"
+              />
+              {actualizando ? "Actualizando…" : "Actualizar"}
+            </button>
+
+            <Link
+              to="/inscripciones/nueva"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1769B3] px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-800"
+            >
+              <Plus size={19} />
+              Nueva inscripción
+            </Link>
+          </div>
         </header>
 
         {cargando && (

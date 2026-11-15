@@ -15,21 +15,53 @@ import {
   ClipboardList,
   UserCog,
   CalendarCog,
+  Plus,
+  Pencil,
+  Trash2,
+  Copy,
+  History,
 } from "lucide-react";
 import keycloak from "../../auth/keycloak";
 import {
+  borrarPeriodoInscripcion,
   guardarPeriodoInscripcion,
   obtenerEstadoSistema,
   obtenerPeriodoInscripcion,
+  obtenerTemporadas,
   type PeriodoInscripcion,
+  type TemporadaHistorial,
 } from "../../services/sistema";
-import { obtenerTurnos } from "../../services/turnos";
+import {
+  actualizarTurno,
+  copiarTurnos,
+  crearTurno,
+  eliminarTurno,
+  obtenerTurnos,
+  obtenerTurnosDeTemporada,
+  type DatosTurno,
+} from "../../services/turnos";
 import type { Turno } from "../../types/turno";
 
 const MAX_CUPOS_TEMPORADA = 600;
 const urlConfiguracion = "/api/v1/admin/configuracion-temporada";
 
 type TurnoEditable = Turno & { cupoEditable: string };
+
+interface FormularioTurno {
+  nombre: string;
+  sede: string;
+  fecha_desde: string;
+  fecha_hasta: string;
+  cupoEditable: string;
+}
+
+const formularioTurnoVacio: FormularioTurno = {
+  nombre: "",
+  sede: "",
+  fecha_desde: "",
+  fecha_hasta: "",
+  cupoEditable: "150",
+};
 
 interface ConfiguracionTemporada {
   temporada: number;
@@ -67,21 +99,22 @@ const servicios = [
 const perfiles = [
   {
     nombre: "Tutor",
-    descripcion: "Realiza inscripciones y consulta sus solicitudes.",
+    descripcion:
+      "Inscribe a sus chicos, consulta el estado de sus solicitudes y puede cancelarlas.",
     icono: UsersRound,
     color: "bg-blue-100 text-blue-700",
   },
   {
     nombre: "Administrativo",
     descripcion:
-      "Consulta inscripciones y atiende las solicitudes que requieren revisión.",
+      "Carga inscripciones desde la oficina, consulta el listado completo y cancela solicitudes. Es el único perfil con acceso a la gestión de inscripciones.",
     icono: ClipboardList,
     color: "bg-emerald-100 text-emerald-700",
   },
   {
     nombre: "Administrador de Sistemas",
     descripcion:
-      "Supervisa la aplicación y administra la configuración técnica autorizada.",
+      "Perfil técnico: configura la temporada y las edades, el período de inscripción, la distribución de cupos y los turnos, y supervisa el estado de los servicios. No gestiona inscripciones.",
     icono: UserCog,
     color: "bg-violet-100 text-violet-700",
   },
@@ -102,8 +135,11 @@ function AdministracionSistemaPage() {
   const [apertura, setApertura] = useState("");
   const [cierre, setCierre] = useState("");
   const [guardandoPeriodo, setGuardandoPeriodo] = useState(false);
+  const [borrandoPeriodo, setBorrandoPeriodo] = useState(false);
   const [errorPeriodo, setErrorPeriodo] = useState("");
   const [periodoGuardado, setPeriodoGuardado] = useState(false);
+  const [periodoEliminado, setPeriodoEliminado] = useState(false);
+  const [recargaPeriodo, setRecargaPeriodo] = useState(0);
 
   const [temporadaGuardada, setTemporadaGuardada] = useState<number | null>(null);
   const [temporadaEditable, setTemporadaEditable] = useState("");
@@ -111,11 +147,31 @@ function AdministracionSistemaPage() {
   const [edadMaxima, setEdadMaxima] = useState("");
   const [guardandoConfiguracion, setGuardandoConfiguracion] = useState(false);
   const [errorConfiguracion, setErrorConfiguracion] = useState("");
+  const [configuracionGuardada, setConfiguracionGuardada] = useState(false);
 
   const [turnosCupos, setTurnosCupos] = useState<TurnoEditable[] | null>(null);
   const [guardandoCupos, setGuardandoCupos] = useState(false);
   const [errorCupos, setErrorCupos] = useState("");
   const [cuposGuardados, setCuposGuardados] = useState(false);
+  const [recargaTurnos, setRecargaTurnos] = useState(0);
+
+  const [turnoEnEdicion, setTurnoEnEdicion] = useState<Turno | "nuevo" | null>(
+    null,
+  );
+  const [formularioTurno, setFormularioTurno] =
+    useState<FormularioTurno>(formularioTurnoVacio);
+  const [guardandoTurno, setGuardandoTurno] = useState(false);
+  const [copiandoTurnos, setCopiandoTurnos] = useState(false);
+  const [errorTurno, setErrorTurno] = useState("");
+  const [mensajeTurno, setMensajeTurno] = useState("");
+
+  const [temporadas, setTemporadas] = useState<TemporadaHistorial[]>([]);
+  const [temporadaHistorial, setTemporadaHistorial] = useState("");
+  const [turnosHistorial, setTurnosHistorial] = useState<Turno[] | null>(null);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
+  const [errorTemporadas, setErrorTemporadas] = useState("");
+  const [errorTurnosHistorial, setErrorTurnosHistorial] = useState("");
+  const errorHistorial = errorTemporadas || errorTurnosHistorial;
 
   const totalGuardado = turnosCupos?.reduce(
     (total, turno) => total + turno.cupo_total,
@@ -172,6 +228,7 @@ function AdministracionSistemaPage() {
 
     async function cargarPeriodo() {
       try {
+        setErrorPeriodo("");
         await keycloak.updateToken(30);
 
         if (!keycloak.token) {
@@ -201,7 +258,7 @@ function AdministracionSistemaPage() {
     return () => {
       activo = false;
     };
-  }, []);
+  }, [recargaPeriodo]);
 
   useEffect(() => {
     let activo = true;
@@ -256,6 +313,7 @@ function AdministracionSistemaPage() {
 
     async function cargarTurnosCupos() {
       try {
+        setErrorCupos("");
         await keycloak.updateToken(30);
 
         if (!keycloak.token) {
@@ -291,7 +349,100 @@ function AdministracionSistemaPage() {
     return () => {
       activo = false;
     };
-  }, [temporadaGuardada]);
+  }, [temporadaGuardada, recargaTurnos]);
+
+  useEffect(() => {
+    let activo = true;
+
+    async function cargarTemporadas() {
+      try {
+        setErrorTemporadas("");
+        await keycloak.updateToken(30);
+
+        if (!keycloak.token) {
+          throw new Error("Volvé a iniciar sesión.");
+        }
+
+        const datos = await obtenerTemporadas(keycloak.token);
+        if (!activo) return;
+
+        setTemporadas(datos);
+        setTemporadaHistorial((actual) => {
+          if (actual && datos.some((item) => String(item.temporada) === actual)) {
+            return actual;
+          }
+
+          const activa = datos.find((item) => item.activa) ?? datos[0];
+
+          return activa ? String(activa.temporada) : "";
+        });
+      } catch (error) {
+        if (activo) {
+          setErrorTemporadas(
+            error instanceof Error
+              ? error.message
+              : "No se pudo cargar el historial de temporadas.",
+          );
+        }
+      }
+    }
+
+    void cargarTemporadas();
+
+    return () => {
+      activo = false;
+    };
+  }, [recargaTurnos]);
+
+  useEffect(() => {
+    if (!temporadaHistorial) {
+      setTurnosHistorial(null);
+      return;
+    }
+
+    let activo = true;
+
+    async function cargarTurnosHistorial() {
+      setCargandoHistorial(true);
+      setErrorTurnosHistorial("");
+
+      try {
+        await keycloak.updateToken(30);
+
+        if (!keycloak.token) {
+          throw new Error("Volvé a iniciar sesión.");
+        }
+
+        const datos = await obtenerTurnosDeTemporada(
+          Number(temporadaHistorial),
+          keycloak.token,
+        );
+
+        if (activo) {
+          setTurnosHistorial(datos);
+        }
+      } catch (error) {
+        if (activo) {
+          setTurnosHistorial(null);
+          setErrorTurnosHistorial(
+            error instanceof Error
+              ? error.message
+              : "No se pudieron cargar los turnos de la temporada.",
+          );
+        }
+      } finally {
+        if (activo) {
+          setCargandoHistorial(false);
+        }
+      }
+    }
+
+    void cargarTurnosHistorial();
+
+    return () => {
+      activo = false;
+    };
+  }, [temporadaHistorial, recargaTurnos]);
 
   async function guardarDistribucion(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -367,9 +518,22 @@ function AdministracionSistemaPage() {
     if (guardandoConfiguracion || guardandoPeriodo || guardandoCupos) return;
 
     setErrorConfiguracion("");
+    setConfiguracionGuardada(false);
 
     if (Number(edadMaxima) < Number(edadMinima)) {
       setErrorConfiguracion("La edad máxima debe ser mayor o igual a la mínima.");
+      return;
+    }
+
+    const nuevaTemporada = Number(temporadaEditable);
+
+    if (
+      temporadaGuardada !== null &&
+      nuevaTemporada !== temporadaGuardada &&
+      !window.confirm(
+        `Vas a activar la temporada ${nuevaTemporada}. Los datos de la temporada ${temporadaGuardada} quedarán disponibles solo en el historial. ¿Continuar?`,
+      )
+    ) {
       return;
     }
 
@@ -405,13 +569,23 @@ function AdministracionSistemaPage() {
         );
       }
 
-      window.location.reload();
+      const datos: ConfiguracionTemporada = await respuesta.json();
+
+      setTemporadaGuardada(datos.temporada);
+      setTemporadaEditable(String(datos.temporada));
+      setEdadMinima(String(datos.edad_minima));
+      setEdadMaxima(String(datos.edad_maxima));
+      setTurnoEnEdicion(null);
+      setRecargaPeriodo((actual) => actual + 1);
+      setRecargaTurnos((actual) => actual + 1);
+      setConfiguracionGuardada(true);
     } catch (error) {
       setErrorConfiguracion(
         error instanceof Error
           ? error.message
           : "No se pudo guardar la configuración.",
       );
+    } finally {
       setGuardandoConfiguracion(false);
     }
   }
@@ -423,6 +597,7 @@ function AdministracionSistemaPage() {
 
     setErrorPeriodo("");
     setPeriodoGuardado(false);
+    setPeriodoEliminado(false);
 
     if (!apertura || !cierre || cierre <= apertura) {
       setErrorPeriodo("El cierre debe ser posterior a la apertura.");
@@ -454,6 +629,208 @@ function AdministracionSistemaPage() {
       );
     } finally {
       setGuardandoPeriodo(false);
+    }
+  }
+
+  async function manejarBorradoPeriodo() {
+    if (
+      borrandoPeriodo ||
+      guardandoPeriodo ||
+      guardandoConfiguracion ||
+      guardandoCupos
+    ) {
+      return;
+    }
+
+    const confirmar = window.confirm(
+      "¿Borrar el período de inscripción? La inscripción queda cerrada " +
+        "hasta que configures uno nuevo.",
+    );
+
+    if (!confirmar) return;
+
+    setBorrandoPeriodo(true);
+    setErrorPeriodo("");
+    setPeriodoGuardado(false);
+    setPeriodoEliminado(false);
+
+    try {
+      await keycloak.updateToken(30);
+
+      if (!keycloak.token) {
+        throw new Error("Volvé a iniciar sesión.");
+      }
+
+      await borrarPeriodoInscripcion(keycloak.token);
+
+      setPeriodo((anterior) =>
+        anterior ? { ...anterior, apertura: null, cierre: null } : anterior,
+      );
+      setApertura("");
+      setCierre("");
+      setPeriodoEliminado(true);
+    } catch (error) {
+      setErrorPeriodo(
+        error instanceof Error
+          ? error.message
+          : "No se pudo borrar el período.",
+      );
+    } finally {
+      setBorrandoPeriodo(false);
+    }
+  }
+
+  function abrirNuevoTurno() {
+    setTurnoEnEdicion("nuevo");
+    setFormularioTurno(formularioTurnoVacio);
+    setErrorTurno("");
+    setMensajeTurno("");
+  }
+
+  function abrirEdicionTurno(turno: Turno) {
+    setTurnoEnEdicion(turno);
+    setFormularioTurno({
+      nombre: turno.nombre,
+      sede: turno.sede,
+      fecha_desde: turno.fecha_desde,
+      fecha_hasta: turno.fecha_hasta,
+      cupoEditable: String(turno.cupo_total),
+    });
+    setErrorTurno("");
+    setMensajeTurno("");
+  }
+
+  async function guardarTurno(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+
+    if (!turnoEnEdicion || guardandoTurno || copiandoTurnos) return;
+
+    setErrorTurno("");
+    setMensajeTurno("");
+
+    const cupo = Number(formularioTurno.cupoEditable);
+
+    if (!formularioTurno.nombre.trim() || !formularioTurno.sede.trim()) {
+      setErrorTurno("El nombre y la sede son obligatorios.");
+      return;
+    }
+
+    if (!formularioTurno.fecha_desde || !formularioTurno.fecha_hasta) {
+      setErrorTurno("Las fechas de inicio y fin son obligatorias.");
+      return;
+    }
+
+    if (formularioTurno.fecha_hasta < formularioTurno.fecha_desde) {
+      setErrorTurno("La fecha de fin debe ser posterior a la de inicio.");
+      return;
+    }
+
+    if (!Number.isInteger(cupo) || cupo < 0) {
+      setErrorTurno("El cupo debe ser un número entero mayor o igual a cero.");
+      return;
+    }
+
+    const datos: DatosTurno = {
+      nombre: formularioTurno.nombre.trim(),
+      sede: formularioTurno.sede.trim(),
+      fecha_desde: formularioTurno.fecha_desde,
+      fecha_hasta: formularioTurno.fecha_hasta,
+      cupo_total: cupo,
+    };
+
+    setGuardandoTurno(true);
+
+    try {
+      await keycloak.updateToken(30);
+
+      if (!keycloak.token) {
+        throw new Error("Volvé a iniciar sesión.");
+      }
+
+      if (turnoEnEdicion === "nuevo") {
+        await crearTurno(datos, keycloak.token);
+        setMensajeTurno("Turno creado correctamente.");
+      } else {
+        await actualizarTurno(turnoEnEdicion.id, datos, keycloak.token);
+        setMensajeTurno("Turno actualizado correctamente.");
+      }
+
+      setTurnoEnEdicion(null);
+      setRecargaTurnos((actual) => actual + 1);
+    } catch (error) {
+      setErrorTurno(
+        error instanceof Error ? error.message : "No se pudo guardar el turno.",
+      );
+    } finally {
+      setGuardandoTurno(false);
+    }
+  }
+
+  async function borrarTurno(turno: Turno) {
+    if (guardandoTurno || copiandoTurnos) return;
+
+    const confirmar = window.confirm(
+      `¿Querés eliminar el turno ${turno.nombre} de ${turno.sede}?`,
+    );
+
+    if (!confirmar) return;
+
+    setErrorTurno("");
+    setMensajeTurno("");
+    setGuardandoTurno(true);
+
+    try {
+      await keycloak.updateToken(30);
+
+      if (!keycloak.token) {
+        throw new Error("Volvé a iniciar sesión.");
+      }
+
+      await eliminarTurno(turno.id, keycloak.token);
+      setMensajeTurno("Turno eliminado correctamente.");
+      setRecargaTurnos((actual) => actual + 1);
+    } catch (error) {
+      setErrorTurno(
+        error instanceof Error ? error.message : "No se pudo eliminar el turno.",
+      );
+    } finally {
+      setGuardandoTurno(false);
+    }
+  }
+
+  async function copiarTurnosTemporadaAnterior() {
+    if (guardandoTurno || copiandoTurnos) return;
+
+    const confirmar = window.confirm(
+      "Se van a copiar los turnos de la temporada anterior con las fechas ajustadas. ¿Continuar?",
+    );
+
+    if (!confirmar) return;
+
+    setErrorTurno("");
+    setMensajeTurno("");
+    setCopiandoTurnos(true);
+
+    try {
+      await keycloak.updateToken(30);
+
+      if (!keycloak.token) {
+        throw new Error("Volvé a iniciar sesión.");
+      }
+
+      const turnos = await copiarTurnos(keycloak.token);
+      setMensajeTurno(
+        `Se copiaron ${turnos.length} turnos. Revisá las fechas y los cupos.`,
+      );
+      setRecargaTurnos((actual) => actual + 1);
+    } catch (error) {
+      setErrorTurno(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron copiar los turnos.",
+      );
+    } finally {
+      setCopiandoTurnos(false);
     }
   }
 
@@ -567,7 +944,10 @@ function AdministracionSistemaPage() {
                     max={9999}
                     required
                     value={temporadaEditable}
-                    onChange={(evento) => setTemporadaEditable(evento.target.value)}
+                    onChange={(evento) => {
+                      setTemporadaEditable(evento.target.value);
+                      setConfiguracionGuardada(false);
+                    }}
                     className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
                   />
                 </label>
@@ -589,7 +969,10 @@ function AdministracionSistemaPage() {
                     min={0}
                     required
                     value={edadMinima}
-                    onChange={(evento) => setEdadMinima(evento.target.value)}
+                    onChange={(evento) => {
+                      setEdadMinima(evento.target.value);
+                      setConfiguracionGuardada(false);
+                    }}
                     className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
                   />
                 </label>
@@ -602,7 +985,10 @@ function AdministracionSistemaPage() {
                     min={0}
                     required
                     value={edadMaxima}
-                    onChange={(evento) => setEdadMaxima(evento.target.value)}
+                    onChange={(evento) => {
+                      setEdadMaxima(evento.target.value);
+                      setConfiguracionGuardada(false);
+                    }}
                     className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
                   />
                 </label>
@@ -629,10 +1015,40 @@ function AdministracionSistemaPage() {
                   {errorConfiguracion}
                 </p>
               )}
+
+              {configuracionGuardada && !errorConfiguracion && (
+                <p
+                  role="status"
+                  className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"
+                >
+                  Configuración guardada correctamente.
+                </p>
+              )}
             </form>
 
             <div className="mt-5 border-t border-slate-200 pt-5">
-              <h3 className="font-bold text-[#142D50]">Distribución de cupos</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="font-bold text-[#142D50]">
+                  Distribución de cupos
+                </h3>
+
+                <button
+                  type="button"
+                  onClick={abrirNuevoTurno}
+                  disabled={
+                    temporadaGuardada === null ||
+                    guardandoTurno ||
+                    copiandoTurnos ||
+                    guardandoCupos ||
+                    guardandoConfiguracion ||
+                    guardandoPeriodo
+                  }
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Plus size={16} aria-hidden="true" />
+                  Agregar turno
+                </button>
+              </div>
 
               {turnosCupos === null && !errorCupos && !errorConfiguracion && (
                 <p role="status" className="mt-3 text-sm text-slate-600">
@@ -641,9 +1057,23 @@ function AdministracionSistemaPage() {
               )}
 
               {turnosCupos?.length === 0 && (
-                <p className="mt-3 text-sm text-slate-600">
-                  La temporada activa todavía no tiene turnos cargados.
-                </p>
+                <div className="mt-3 space-y-3">
+                  <p className="text-sm text-slate-600">
+                    La temporada activa todavía no tiene turnos cargados.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={copiarTurnosTemporadaAnterior}
+                    disabled={copiandoTurnos || guardandoTurno}
+                    className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Copy size={16} aria-hidden="true" />
+                    {copiandoTurnos
+                      ? "Copiando turnos…"
+                      : "Copiar turnos de la temporada anterior"}
+                  </button>
+                </div>
               )}
 
               {turnosCupos && turnosCupos.length > 0 && (
@@ -660,6 +1090,8 @@ function AdministracionSistemaPage() {
                             <th scope="col" className="px-3 py-2">Período</th>
                             <th scope="col" className="px-3 py-2">Turno</th>
                             <th scope="col" className="px-3 py-2">Cupos</th>
+                            <th scope="col" className="px-3 py-2">Disponibles</th>
+                            <th scope="col" className="px-3 py-2">Acciones</th>
                           </tr>
                         </thead>
 
@@ -697,6 +1129,40 @@ function AdministracionSistemaPage() {
                                   className="w-24 rounded-lg border border-slate-300 px-2 py-1.5"
                                 />
                               </td>
+                              <td className="px-3 py-2 font-semibold text-[#142D50]">
+                                {turno.cupos_disponibles}
+                              </td>
+                              <td className="px-3 py-2">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => abrirEdicionTurno(turno)}
+                                    disabled={
+                                      guardandoTurno ||
+                                      copiandoTurnos ||
+                                      guardandoCupos
+                                    }
+                                    aria-label={`Editar ${turno.nombre} de ${turno.sede}`}
+                                    className="rounded-lg border border-slate-300 p-1.5 text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    <Pencil size={16} aria-hidden="true" />
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => borrarTurno(turno)}
+                                    disabled={
+                                      guardandoTurno ||
+                                      copiandoTurnos ||
+                                      guardandoCupos
+                                    }
+                                    aria-label={`Eliminar ${turno.nombre} de ${turno.sede}`}
+                                    className="rounded-lg border border-red-200 p-1.5 text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    <Trash2 size={16} aria-hidden="true" />
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -726,6 +1192,149 @@ function AdministracionSistemaPage() {
                     {guardandoCupos ? "Guardando…" : "Guardar distribución"}
                   </button>
                 </form>
+              )}
+
+              {turnoEnEdicion !== null && (
+                <form
+                  onSubmit={guardarTurno}
+                  className="mt-5 space-y-4 rounded-xl border border-blue-200 bg-blue-50/50 p-4"
+                >
+                  <h4 className="font-bold text-[#142D50]">
+                    {turnoEnEdicion === "nuevo"
+                      ? "Nuevo turno"
+                      : `Editar ${turnoEnEdicion.nombre}`}
+                  </h4>
+
+                  <fieldset
+                    disabled={guardandoTurno || copiandoTurnos}
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                  >
+                    <label className="text-sm font-semibold text-slate-700">
+                      Nombre
+                      <input
+                        type="text"
+                        required
+                        maxLength={120}
+                        value={formularioTurno.nombre}
+                        onChange={(evento) =>
+                          setFormularioTurno((actual) => ({
+                            ...actual,
+                            nombre: evento.target.value,
+                          }))
+                        }
+                        className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                      />
+                    </label>
+
+                    <label className="text-sm font-semibold text-slate-700">
+                      Sede
+                      <input
+                        type="text"
+                        required
+                        maxLength={120}
+                        value={formularioTurno.sede}
+                        onChange={(evento) =>
+                          setFormularioTurno((actual) => ({
+                            ...actual,
+                            sede: evento.target.value,
+                          }))
+                        }
+                        className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                      />
+                    </label>
+
+                    <label className="text-sm font-semibold text-slate-700">
+                      Fecha de inicio
+                      <input
+                        type="date"
+                        required
+                        value={formularioTurno.fecha_desde}
+                        onChange={(evento) =>
+                          setFormularioTurno((actual) => ({
+                            ...actual,
+                            fecha_desde: evento.target.value,
+                          }))
+                        }
+                        className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                      />
+                    </label>
+
+                    <label className="text-sm font-semibold text-slate-700">
+                      Fecha de fin
+                      <input
+                        type="date"
+                        required
+                        value={formularioTurno.fecha_hasta}
+                        onChange={(evento) =>
+                          setFormularioTurno((actual) => ({
+                            ...actual,
+                            fecha_hasta: evento.target.value,
+                          }))
+                        }
+                        className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                      />
+                    </label>
+
+                    <label className="text-sm font-semibold text-slate-700">
+                      Cupos
+                      <input
+                        type="number"
+                        min={0}
+                        max={MAX_CUPOS_TEMPORADA}
+                        step={1}
+                        required
+                        value={formularioTurno.cupoEditable}
+                        onChange={(evento) =>
+                          setFormularioTurno((actual) => ({
+                            ...actual,
+                            cupoEditable: evento.target.value,
+                          }))
+                        }
+                        className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                      />
+                    </label>
+                  </fieldset>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="submit"
+                      disabled={guardandoTurno || copiandoTurnos}
+                      className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {guardandoTurno ? "Guardando…" : "Guardar turno"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTurnoEnEdicion(null);
+                        setErrorTurno("");
+                      }}
+                      disabled={guardandoTurno}
+                      className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {errorTurno && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800"
+                >
+                  {errorTurno}
+                </p>
+              )}
+
+              {mensajeTurno && (
+                <p
+                  role="status"
+                  className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800"
+                >
+                  {mensajeTurno}
+                </p>
               )}
 
               {errorCupos && (
@@ -763,6 +1372,7 @@ function AdministracionSistemaPage() {
                     disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
                     onChange={() => {
                       setPeriodoGuardado(false);
+                      setPeriodoEliminado(false);
                       setErrorPeriodo("");
                     }}
                     className="grid grid-cols-1 gap-4 md:grid-cols-2"
@@ -790,13 +1400,31 @@ function AdministracionSistemaPage() {
                     </label>
                   </fieldset>
 
-                  <button
-                    type="submit"
-                    disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
-                    className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {guardandoPeriodo ? "Guardando…" : "Guardar período"}
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="submit"
+                      disabled={guardandoPeriodo || guardandoConfiguracion || guardandoCupos}
+                      className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {guardandoPeriodo ? "Guardando…" : "Guardar período"}
+                    </button>
+
+                    {periodo.apertura && (
+                      <button
+                        type="button"
+                        onClick={() => void manejarBorradoPeriodo()}
+                        disabled={
+                          borrandoPeriodo ||
+                          guardandoPeriodo ||
+                          guardandoConfiguracion ||
+                          guardandoCupos
+                        }
+                        className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {borrandoPeriodo ? "Borrando…" : "Borrar período"}
+                      </button>
+                    )}
+                  </div>
                 </form>
               )}
 
@@ -815,6 +1443,143 @@ function AdministracionSistemaPage() {
                   className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"
                 >
                   Período guardado correctamente.
+                </p>
+              )}
+
+              {periodoEliminado && (
+                <p
+                  role="status"
+                  className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"
+                >
+                  Período eliminado. La inscripción queda cerrada hasta que
+                  configures uno nuevo.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 border-t border-slate-200 pt-5">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-slate-100 p-2 text-slate-700">
+                  <History size={20} aria-hidden="true" />
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="font-bold text-[#142D50]">
+                    Historial de temporadas
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Consultá los turnos de la temporada activa y de las
+                    anteriores.
+                  </p>
+                </div>
+              </div>
+
+              {temporadas.length > 0 && (
+                <label className="mt-4 block max-w-xs text-sm font-semibold text-slate-700">
+                  Temporada
+                  <select
+                    value={temporadaHistorial}
+                    onChange={(evento) =>
+                      setTemporadaHistorial(evento.target.value)
+                    }
+                    className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2"
+                  >
+                    {temporadas.map((temporada) => (
+                      <option
+                        key={temporada.temporada}
+                        value={temporada.temporada}
+                      >
+                        {temporada.temporada}
+                        {temporada.activa ? " (activa)" : ""} ·{" "}
+                        {temporada.turnos}{" "}
+                        {temporada.turnos === 1 ? "turno" : "turnos"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              {cargandoHistorial && (
+                <p role="status" className="mt-3 text-sm text-slate-600">
+                  Cargando los turnos de la temporada…
+                </p>
+              )}
+
+              {errorHistorial && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-800"
+                >
+                  {errorHistorial}
+                </p>
+              )}
+
+              {!cargandoHistorial &&
+                !errorHistorial &&
+                temporadas.length === 0 && (
+                  <p className="mt-3 text-sm text-slate-600">
+                    Todavía no hay temporadas registradas.
+                  </p>
+                )}
+
+              {!cargandoHistorial &&
+                !errorHistorial &&
+                turnosHistorial &&
+                (turnosHistorial.length === 0 ? (
+                  <p className="mt-3 text-sm text-slate-600">
+                    La temporada {temporadaHistorial} no tiene turnos cargados.
+                  </p>
+                ) : (
+                  <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="bg-slate-50 text-slate-600">
+                        <tr>
+                          <th scope="col" className="px-3 py-2">Período</th>
+                          <th scope="col" className="px-3 py-2">Turno</th>
+                          <th scope="col" className="px-3 py-2">Sede</th>
+                          <th scope="col" className="px-3 py-2">Cupos</th>
+                          <th scope="col" className="px-3 py-2">
+                            Disponibles
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {turnosHistorial.map((turno) => (
+                          <tr
+                            key={turno.id}
+                            className="border-t border-slate-100"
+                          >
+                            <td className="whitespace-nowrap px-3 py-2">
+                              {turno.fecha_desde} → {turno.fecha_hasta}
+                            </td>
+                            <td className="px-3 py-2 font-semibold text-[#142D50]">
+                              {turno.nombre}
+                            </td>
+                            <td className="px-3 py-2">{turno.sede}</td>
+                            <td className="px-3 py-2">{turno.cupo_total}</td>
+                            <td className="px-3 py-2">
+                              {turno.cupos_disponibles}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+
+              {temporadas.length > 0 && (
+                <p className="mt-3 text-xs text-slate-500">
+                  {(() => {
+                    const seleccionada = temporadas.find(
+                      (item) =>
+                        String(item.temporada) === temporadaHistorial,
+                    );
+                    const cantidad = seleccionada?.inscripciones ?? 0;
+
+                    return `${cantidad} ${
+                      cantidad === 1 ? "inscripción" : "inscripciones"
+                    } registradas en la temporada seleccionada.`;
+                  })()}
                 </p>
               )}
             </div>
@@ -844,6 +1609,31 @@ function AdministracionSistemaPage() {
               </p>
             </div>
           </div>
+
+          {estado && (
+            <div className="mb-5 grid grid-cols-1 gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <p className="text-slate-500">Aplicación</p>
+                <p className="font-semibold text-[#142D50]">{estado.app}</p>
+              </div>
+              <div>
+                <p className="text-slate-500">Versión</p>
+                <p className="font-semibold text-[#142D50]">{estado.version}</p>
+              </div>
+              <div>
+                <p className="text-slate-500">Entorno</p>
+                <p className="font-semibold text-[#142D50]">
+                  {estado.environment}
+                </p>
+              </div>
+              <div>
+                <p className="text-slate-500">Temporada activa</p>
+                <p className="font-semibold text-[#142D50]">
+                  {estado.temporada}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {servicios.map((servicio) => {
@@ -984,8 +1774,9 @@ function AdministracionSistemaPage() {
           </div>
 
           <p className="mt-5 text-sm text-slate-500">
-            La autenticación y asignación real de roles se integrará mediante
-            Keycloak.
+            La autenticación y los roles se gestionan con Keycloak. La creación
+            de usuarios y la asignación de roles se hacen desde la consola de
+            administración de Keycloak, no desde este panel.
           </p>
         </section>
       </div>

@@ -1,6 +1,10 @@
 type EstadoServicio = 'ok' | 'error'
 
-interface EstadoSistema {
+export interface EstadoSistema {
+  app: string
+  environment: string
+  temporada: number
+  version: string
   services: {
     api: EstadoServicio
     database: EstadoServicio
@@ -15,7 +19,15 @@ export interface PeriodoInscripcion {
   cierre: string | null
 }
 
+export interface TemporadaHistorial {
+  temporada: number
+  activa: boolean
+  turnos: number
+  inscripciones: number
+}
+
 const URL_PERIODO = '/api/v1/admin/periodo-inscripcion'
+const URL_TEMPORADAS = '/api/v1/admin/temporadas'
 
 export async function obtenerEstadoSistema(
   token: string
@@ -47,6 +59,42 @@ export async function obtenerPeriodoInscripcion(
 
   if (!respuesta.ok) {
     throw new Error('No se pudo cargar el período de inscripción.')
+  }
+
+  return respuesta.json()
+}
+
+export async function borrarPeriodoInscripcion(token: string): Promise<void> {
+  const respuesta = await fetch(URL_PERIODO, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!respuesta.ok) {
+    const problema = await respuesta.json().catch(() => null)
+
+    throw new Error(
+      problema?.errors?.[0]?.mensaje ??
+        problema?.detail ??
+        'No se pudo borrar el período de inscripción.'
+    )
+  }
+}
+
+export async function obtenerTemporadas(
+  token: string
+): Promise<TemporadaHistorial[]> {
+  const respuesta = await fetch(URL_TEMPORADAS, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: 'no-store',
+  })
+
+  if (!respuesta.ok) {
+    throw new Error('No se pudo cargar el historial de temporadas.')
   }
 
   return respuesta.json()

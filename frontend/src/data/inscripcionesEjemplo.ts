@@ -1,5 +1,5 @@
 
-export type EstadoInscripcion = 'Confirmada' | 'En revisión' | 'Lista de espera' | 'Cancelada'
+export type EstadoInscripcion = 'Confirmada' | 'Lista de espera' | 'Cancelada'
 
 export interface Inscripcion {
   id: number
@@ -56,7 +56,7 @@ export const inscripcionesEjemplo: Inscripcion[] = [
     sede: 'Club Municipal',
     temporada: 2027,
     fecha_inscripcion: '2026-10-21',
-    estado: 'En revisión',
+    estado: 'Confirmada',
   },
   
 {

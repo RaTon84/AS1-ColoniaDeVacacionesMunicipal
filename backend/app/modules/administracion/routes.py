@@ -1,8 +1,10 @@
+import csv
+import io
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field, NaiveDatetime, model_validator
-from sqlalchemy import select, text, update
+from sqlalchemy import delete, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -15,6 +17,7 @@ from app.modules.administracion.temporadas import (
 from app.modules.inscripciones.model import EstadoInscripcion
 from app.modules.inscripciones.repository import InscripcionRepository
 from app.modules.inscripciones.schemas import AdminInscripcionOut
+from app.modules.turnos.constants import MAX_CUPOS_TEMPORADA
 from app.modules.turnos.model import Turno
 from app.modules.turnos.repository import TurnoRepository
 from app.modules.turnos.schemas import TurnoOut
@@ -24,8 +27,6 @@ router = APIRouter(prefix="/api/v1/admin", tags=["Administración"])
 repo = InscripcionRepository()
 repo_turnos = TurnoRepository()
 hora_argentina = ZoneInfo("America/Argentina/Buenos_Aires")
-
-MAX_CUPOS_TEMPORADA = 600
 
 
 class PeriodoEntrada(BaseModel):
@@ -48,10 +49,84 @@ class PeriodoSalida(BaseModel):
 @router.get("/inscripciones", response_model=list[AdminInscripcionOut])
 def listar(
     db: Session = Depends(get_db),
-    _: CurrentUser = Depends(require_roles("administrativo", "administrador_sistema")),
+    _: CurrentUser = Depends(require_roles("administrativo")),
 ):
     temporada = obtener_configuracion_activa(db).temporada
     return repo.list_all(db, temporada)
+
+
+@router.get("/inscripciones/export")
+def exportar_inscripciones(
+    db: Session = Depends(get_db),
+    _: CurrentUser = Depends(require_roles("administrativo")),
+):
+    """Descarga el listado completo de la temporada en CSV para planillas.
+
+    Se usa punto y coma como separador y BOM UTF-8 para que Excel en español
+    abra el archivo directamente con acentos y columnas correctas.
+    """
+    temporada = obtener_configuracion_activa(db).temporada
+    inscripciones = repo.list_all(db, temporada)
+    turnos = {turno.id: turno for turno in repo_turnos.list(db, temporada)}
+
+    buffer = io.StringIO()
+    buffer.write("\ufeff")
+    escritor = csv.writer(buffer, delimiter=";")
+
+    escritor.writerow(
+        [
+            "temporada",
+            "turno",
+            "sede",
+            "dni_chico",
+            "nombre_chico",
+            "apellido_chico",
+            "fecha_nacimiento",
+            "dni_tutor",
+            "nombre_tutor",
+            "apellido_tutor",
+            "email_tutor",
+            "telefono_tutor",
+            "estado",
+            "posicion_espera",
+            "creado_en",
+            "creado_por",
+        ]
+    )
+
+    for inscripcion in inscripciones:
+        turno = turnos.get(inscripcion.turno_id)
+
+        escritor.writerow(
+            [
+                inscripcion.temporada,
+                turno.nombre if turno else "",
+                turno.sede if turno else "",
+                inscripcion.dni_chico,
+                inscripcion.nombre_chico,
+                inscripcion.apellido_chico,
+                inscripcion.fecha_nacimiento.isoformat(),
+                inscripcion.dni_tutor,
+                inscripcion.nombre_tutor,
+                inscripcion.apellido_tutor,
+                inscripcion.email_tutor,
+                inscripcion.telefono_tutor,
+                inscripcion.estado,
+                inscripcion.posicion_espera or "",
+                inscripcion.creado_en.isoformat(timespec="seconds"),
+                inscripcion.creado_por,
+            ]
+        )
+
+    return Response(
+        content=buffer.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="inscripciones-{temporada}.csv"'
+            )
+        },
+    )
 
 
 @router.get("/periodo-inscripcion", response_model=PeriodoSalida)
@@ -98,6 +173,26 @@ def guardar_periodo(
     db.commit()
 
     return PeriodoSalida(temporada=temporada, **fechas)
+
+
+@router.delete("/periodo-inscripcion", status_code=204)
+def borrar_periodo(
+    db: Session = Depends(get_db),
+    _: CurrentUser = Depends(require_roles("administrador_sistema")),
+):
+    """Deja la temporada activa sin período configurado.
+
+    Es idempotente: si no había período, también devuelve 204. Con el período
+    borrado, la inscripción queda cerrada hasta que se configure uno nuevo.
+    """
+    temporada = obtener_configuracion_activa(db).temporada
+
+    db.execute(
+        delete(PeriodoInscripcion).where(PeriodoInscripcion.temporada == temporada)
+    )
+    db.commit()
+
+    return Response(status_code=204)
 
 
 class ConfiguracionTemporadaEntrada(BaseModel):
@@ -162,6 +257,35 @@ def guardar_configuracion_temporada(
     db.commit()
 
     return payload
+
+
+class TemporadaHistorial(BaseModel):
+    temporada: int
+    activa: bool
+    turnos: int
+    inscripciones: int
+
+
+@router.get("/temporadas", response_model=list[TemporadaHistorial])
+def listar_temporadas(
+    db: Session = Depends(get_db),
+    _: CurrentUser = Depends(require_roles("administrador_sistema")),
+):
+    activa = obtener_configuracion_activa(db).temporada
+    configuradas = set(db.scalars(select(ConfiguracionTemporada.temporada)))
+    turnos = repo_turnos.temporadas_con_turnos(db)
+    inscripciones = repo.temporadas_con_inscripciones(db)
+    temporadas = configuradas | set(turnos) | set(inscripciones) | {activa}
+
+    return [
+        TemporadaHistorial(
+            temporada=temporada,
+            activa=temporada == activa,
+            turnos=turnos.get(temporada, 0),
+            inscripciones=inscripciones.get(temporada, 0),
+        )
+        for temporada in sorted(temporadas, reverse=True)
+    ]
 
 
 class CupoDistribucionEntrada(BaseModel):

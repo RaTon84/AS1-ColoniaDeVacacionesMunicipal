@@ -48,6 +48,16 @@ docker compose down -v
 docker compose up -d --build
 ```
 
+## Tests
+
+Los tests de integración corren contra una base aparte (`colonia_test`), nunca contra la base de la
+aplicación. La primera vez hay que crearla:
+
+```bash
+docker compose exec -T postgres psql -U colonia -d postgres -c "CREATE DATABASE colonia_test"
+docker compose exec -T -e PYTHONDONTWRITEBYTECODE=1 app python -m pytest -q -p no:cacheprovider
+```
+
 ## URLs
 
 | Servicio | URL |
@@ -64,6 +74,9 @@ docker compose up -d --build
 | Tutor | `tutor1` | `Tutor123!` |
 | Administrativo | `admin1` | `Admin123!` |
 | Administrador del sistema | `sysadmin1` | `SysAdmin123!` |
+
+Las inscripciones cargadas por la oficina (`admin1`) quedan visibles para el tutor cuando el correo
+declarado coincide con el de su usuario de Keycloak (por ejemplo, `tutor1@example.com`).
 
 ## DNIs de prueba del padrón
 

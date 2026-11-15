@@ -41,6 +41,14 @@ class InscripcionDuplicada(ErrorDeDominio):
     status, tipo, titulo = 409, "/problemas/inscripcion-duplicada", "Inscripción duplicada"
 
 
+class InscripcionNoEditable(ErrorDeDominio):
+    status, tipo, titulo = 409, "/problemas/inscripcion-no-editable", "Inscripción no editable"
+
+
+class PeriodoNoAbierto(ErrorDeDominio):
+    status, tipo, titulo = 409, "/problemas/periodo-no-abierto", "Período de inscripción no abierto"
+
+
 class PadronNoDisponible(ErrorDeDominio):
     status, tipo, titulo = 503, "/problemas/padron-no-disponible", "Padrón no disponible"
     headers = {"Retry-After": "30"}

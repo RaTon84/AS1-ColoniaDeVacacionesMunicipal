@@ -17,7 +17,9 @@ chicos con domicilio en la jurisdicción (se valida contra el padrón de residen
 | NFR estrella | Mantenibilidad y costo |
 | Restricción | Se usa 3 semanas al año: al año siguiente se tiene que volver a levantar sin que nadie se acuerde de cómo |
 
-Roles: tutor (inscribe) y administrativo (gestiona cupos y listas). Sistema externo: padrón de residentes.
+Roles: tutor (inscribe), administrativo (gestiona inscripciones y listas, y consulta cupos) y
+administrador de sistemas (configura temporadas, turnos y distribución de cupos). Sistema externo:
+padrón de residentes.
 
 ## 2. NFRs
 

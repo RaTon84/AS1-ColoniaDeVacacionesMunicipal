@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import CurrentUser, require_roles
+from app.modules.administracion.temporadas import obtener_configuracion_activa
 
 router=APIRouter(prefix="/api/v1",tags=["Sistema"])
 settings=get_settings()
@@ -40,7 +41,7 @@ def system_info(db:Session=Depends(get_db),_:CurrentUser=Depends(require_roles("
     return {
         "app":settings.app_name,
         "environment":settings.environment,
-        "temporada":settings.temporada,
+        "temporada":obtener_configuracion_activa(db).temporada,
         "version":"1.1.0",
         "services":services,
     }

@@ -19,6 +19,7 @@ class CurrentUser:
     sub: str
     username: str
     roles: set[str]
+    email: str | None = None
 
 
 @lru_cache(maxsize=1)
@@ -72,6 +73,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(
         sub=payload.get("sub", "unknown"),
         username=payload.get("preferred_username", payload.get("sub", "unknown")),
         roles=roles,
+        email=payload.get("email"),
     )
 
 

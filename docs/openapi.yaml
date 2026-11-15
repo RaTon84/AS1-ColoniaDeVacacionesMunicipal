@@ -113,10 +113,17 @@ paths:
       description: |
         Registra la inscripción aplicando las reglas de edad, residencia, inscripción única
         y disponibilidad de cupos. Si no quedan cupos, la inscripción se registra en lista de espera.
-        Requiere rol tutor, administrativo o administrador_sistema.
+        Requiere rol tutor o administrativo.
+
+        Solo se acepta si el período de inscripción de la temporada activa está abierto.
+        Si no está configurado, todavía no abrió o ya cerró, responde 409 con
+        `type: /problemas/periodo-no-abierto`.
 
         No es idempotente: repetir el mismo pedido devuelve 409 y no crea una segunda inscripción.
         Un chico cuya inscripción fue cancelada se puede volver a inscribir: entra como un pedido nuevo.
+
+        La inscripción queda asociada a quien la crea. Si la carga la oficina, el tutor la verá en
+        `/api/v1/mis-inscripciones` cuando el correo declarado coincida con el de su usuario.
       operationId: crearInscripcion
       security:
         - keycloak: []
@@ -171,7 +178,7 @@ paths:
       description: |
         Cancela una inscripción de la temporada actual.
         El tutor solo puede cancelar las que creó.
-        El administrativo y el administrador de sistemas pueden cancelar cualquiera.
+        El administrativo puede cancelar cualquiera.
         Si estaba confirmada, promueve al primero en espera del mismo turno.
         Repetir la cancelación no vuelve a liberar un cupo.
       operationId: cancelarInscripcion
@@ -211,8 +218,8 @@ paths:
       tags: [Inscripciones]
       summary: Obtener una inscripción
       description: |
-        Requiere estar autenticado. Un tutor solo puede ver las inscripciones que cargó;
-        los roles administrativo y administrador_sistema ven cualquiera.
+        Requiere rol tutor o administrativo. Un tutor solo puede ver las inscripciones que cargó
+        o las que la oficina cargó con su correo electrónico; el rol administrativo ve cualquiera.
         Si la inscripción es de otro tutor se responde 404, para no revelar que existe.
       operationId: obtenerInscripcion
       security:
@@ -227,6 +234,8 @@ paths:
                 $ref: '#/components/schemas/Inscripcion'
         '401':
           $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
         '404':
           description: La inscripción no existe o no pertenece al usuario
           content:
@@ -241,12 +250,69 @@ paths:
                 instance: /api/v1/inscripciones/99
         '422':
           $ref: '#/components/responses/DatosInvalidos'
+    put:
+      tags: [Inscripciones]
+      summary: Corregir los datos de una inscripción
+      description: |
+        Requiere rol tutor o administrativo. Un tutor solo puede editar sus propias
+        inscripciones (o las que la oficina cargó con su correo); el rol administrativo
+        puede editar cualquiera.
+
+        No cambia el turno, la temporada, el estado ni la posición en la lista de espera.
+        Se validan de nuevo la edad, la inscripción única de la temporada y el padrón
+        (solo si cambió el DNI del tutor).
+
+        Una inscripción cancelada no se puede editar y responde 409 con
+        `type: /problemas/inscripcion-no-editable`.
+        Si la inscripción no existe o no pertenece al tutor se responde 404.
+      operationId: editarInscripcion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InscripcionEditar'
+            example:
+              dni_chico: '50111222'
+              nombre_chico: Juan
+              apellido_chico: Perez
+              fecha_nacimiento: '2017-06-15'
+              dni_tutor: '30111222'
+              nombre_tutor: Maria
+              apellido_tutor: Perez
+              email_tutor: maria.perez@example.com
+              telefono_tutor: '1123456789'
+      responses:
+        '200':
+          description: Inscripción actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inscripcion'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
+        '503':
+          $ref: '#/components/responses/ServicioNoDisponible'
 
   /api/v1/mis-inscripciones:
     get:
       tags: [Inscripciones]
       summary: Consultar las inscripciones del usuario autenticado
-      description: Requiere estar autenticado (cualquier rol).
+      description: |
+        Requiere rol tutor.
+        Devuelve las inscripciones que cargó el tutor y también las que la oficina cargó
+        con su correo electrónico.
       operationId: listarMisInscripciones
       security:
         - keycloak: []
@@ -262,12 +328,14 @@ paths:
                   $ref: '#/components/schemas/Inscripcion'
         '401':
           $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
 
   /api/v1/admin/inscripciones:
     get:
       tags: [Administración]
       summary: Consultar todas las inscripciones de la temporada vigente
-      description: Requiere rol administrativo o administrador_sistema.
+      description: Requiere rol administrativo.
       operationId: listarInscripcionesAdministracion
       security:
         - keycloak: []
@@ -285,6 +353,418 @@ paths:
           $ref: '#/components/responses/NoAutenticado'
         '403':
           $ref: '#/components/responses/Prohibido'
+
+  /api/v1/admin/inscripciones/export:
+    get:
+      tags: [Administración]
+      summary: Exportar las inscripciones de la temporada en CSV
+      description: |
+        Requiere rol administrativo.
+        Devuelve todas las inscripciones de la temporada activa en CSV, con separador
+        punto y coma y BOM UTF-8 para abrirlo directamente con Excel en español.
+      operationId: exportarInscripciones
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Archivo CSV de inscripciones
+          headers:
+            Content-Disposition:
+              description: Nombre del archivo descargado
+              schema:
+                type: string
+                example: attachment; filename="inscripciones-2027.csv"
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+
+  /api/v1/periodo-inscripcion:
+    get:
+      tags: [Inscripciones]
+      summary: Consultar el estado del período de inscripción
+      description: |
+        Requiere rol tutor o administrativo.
+        Devuelve el estado calculado con la temporada activa: `sin_configurar`, `pendiente`,
+        `abierto` o `cerrado`.
+      operationId: consultarPeriodoInscripcion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Estado del período de inscripción de la temporada activa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeriodoInscripcionEstado'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+
+  /api/v1/admin/periodo-inscripcion:
+    get:
+      tags: [Administración]
+      summary: Consultar el período de inscripción configurado
+      description: Requiere rol administrador_sistema.
+      operationId: consultarPeriodoInscripcionAdministracion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Período configurado para la temporada activa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeriodoInscripcionAdministracion'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+    put:
+      tags: [Administración]
+      summary: Configurar el período de inscripción de la temporada activa
+      description: |
+        Requiere rol administrador_sistema.
+        Las fechas se envían en hora local (America/Argentina/Buenos_Aires) y deben cumplir cierre > apertura.
+      operationId: guardarPeriodoInscripcion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeriodoInscripcionEntrada'
+      responses:
+        '200':
+          description: Período guardado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeriodoInscripcionAdministracion'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
+
+    delete:
+      tags: [Administración]
+      summary: Borrar el período de inscripción de la temporada activa
+      description: |
+        Requiere rol administrador_sistema.
+        Deja la temporada activa sin período configurado, por lo que la inscripción
+        queda cerrada hasta que se configure uno nuevo. Es idempotente: si no había
+        período configurado también responde 204.
+      operationId: borrarPeriodoInscripcion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Período borrado (o ya estaba sin configurar)
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+
+  /api/v1/admin/configuracion-temporada:
+    get:
+      tags: [Administración]
+      summary: Consultar la configuración de la temporada activa
+      description: Requiere rol administrador_sistema.
+      operationId: consultarConfiguracionTemporada
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Configuración de la temporada activa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionTemporada'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+    put:
+      tags: [Administración]
+      summary: Activar una temporada y definir el rango de edades
+      description: |
+        Requiere rol administrador_sistema.
+        Al activar una temporada distinta, la anterior queda inactiva.
+        Los turnos y el período de inscripción se configuran por separado para la temporada activa.
+      operationId: guardarConfiguracionTemporada
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfiguracionTemporada'
+      responses:
+        '200':
+          description: Configuración guardada y temporada activada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionTemporada'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
+
+  /api/v1/admin/distribucion-cupos:
+    put:
+      tags: [Administración]
+      summary: Actualizar la distribución de cupos de los turnos
+      description: |
+        Requiere rol administrador_sistema.
+        La suma de cupos no puede superar el máximo de la temporada (600).
+        Un turno no puede quedar por debajo de sus inscripciones confirmadas.
+        Si se liberan cupos, se promueven automáticamente inscripciones de la lista de espera.
+      operationId: guardarDistribucionCupos
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistribucionCuposEntrada'
+      responses:
+        '200':
+          description: Turnos con la distribución actualizada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Turno'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
+
+  /api/v1/admin/temporadas:
+    get:
+      tags: [Administración]
+      summary: Consultar el historial de temporadas
+      description: |
+        Requiere rol administrador_sistema.
+        Devuelve las temporadas configuradas o con turnos o inscripciones, ordenadas de la más
+        reciente a la más antigua, con la temporada activa marcada.
+      operationId: listarTemporadas
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Historial de temporadas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemporadaHistorial'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+
+  /api/v1/admin/turnos:
+    get:
+      tags: [Administración]
+      summary: Consultar los turnos de una temporada
+      description: |
+        Requiere rol administrador_sistema.
+        Si no se indica `temporada`, devuelve los turnos de la temporada activa.
+      operationId: listarTurnosAdministracion
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      parameters:
+        - name: temporada
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9999
+          example: 2027
+      responses:
+        '200':
+          description: Turnos de la temporada consultada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Turno'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
+    post:
+      tags: [Administración]
+      summary: Crear un turno en la temporada activa
+      description: |
+        Requiere rol administrador_sistema.
+        La suma de cupos de la temporada no puede superar el máximo (600).
+        Las fechas deben estar dentro del año de la temporada activa.
+        No puede superponerse con otro turno del mismo nombre y sede.
+      operationId: crearTurno
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TurnoNuevo'
+      responses:
+        '201':
+          description: Turno creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Turno'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
+
+  /api/v1/admin/turnos/{turno_id}:
+    parameters:
+      - name: turno_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+    put:
+      tags: [Administración]
+      summary: Actualizar un turno de la temporada activa
+      description: |
+        Requiere rol administrador_sistema.
+        El cupo no puede quedar por debajo de las inscripciones confirmadas.
+        Si se amplía el cupo, se promueven inscripciones de la lista de espera.
+        Las fechas deben estar dentro del año de la temporada activa.
+        No puede superponerse con otro turno del mismo nombre y sede.
+      operationId: actualizarTurno
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TurnoNuevo'
+      responses:
+        '200':
+          description: Turno actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Turno'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
+    delete:
+      tags: [Administración]
+      summary: Eliminar un turno de la temporada activa
+      description: |
+        Requiere rol administrador_sistema.
+        No se puede eliminar un turno con inscripciones asociadas.
+      operationId: eliminarTurno
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Turno eliminado
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+
+  /api/v1/admin/turnos/copiar:
+    post:
+      tags: [Administración]
+      summary: Copiar los turnos de una temporada anterior a la activa
+      description: |
+        Requiere rol administrador_sistema.
+        Solo se puede usar si la temporada activa todavía no tiene turnos.
+        Si no se indica `temporada_origen`, se usa la última temporada anterior con turnos.
+        Las fechas se desplazan al año de la temporada activa.
+      operationId: copiarTurnos
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CopiarTurnosEntrada'
+      responses:
+        '201':
+          description: Turnos copiados en la temporada activa
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Turno'
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+        '422':
+          $ref: '#/components/responses/DatosInvalidos'
 
 components:
   securitySchemes:
@@ -404,10 +884,9 @@ components:
           minimum: 0
           example: 125
 
-    InscripcionNueva:
+    InscripcionDatos:
       type: object
       required:
-        - turno_id
         - dni_chico
         - nombre_chico
         - apellido_chico
@@ -418,9 +897,6 @@ components:
         - email_tutor
         - telefono_tutor
       properties:
-        turno_id:
-          type: integer
-          example: 1
         dni_chico:
           type: string
           minLength: 6
@@ -466,6 +942,19 @@ components:
           minLength: 6
           maxLength: 50
           example: '1123456789'
+
+    InscripcionNueva:
+      allOf:
+        - $ref: '#/components/schemas/InscripcionDatos'
+        - type: object
+          required: [turno_id]
+          properties:
+            turno_id:
+              type: integer
+              example: 1
+
+    InscripcionEditar:
+      $ref: '#/components/schemas/InscripcionDatos'
 
     Inscripcion:
       type: object
@@ -529,6 +1018,162 @@ components:
               type: string
               description: Identificador del usuario autenticado que creó la inscripción.
               example: 8d53d73d-ef3a-4e3c-a865-2df95fd188f0
+
+    PeriodoInscripcionEstado:
+      type: object
+      required: [estado, apertura, cierre]
+      properties:
+        estado:
+          type: string
+          enum: [sin_configurar, pendiente, abierto, cerrado]
+          example: abierto
+        apertura:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-11-01T08:00:00-03:00'
+        cierre:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-11-30T20:00:00-03:00'
+
+    PeriodoInscripcionAdministracion:
+      type: object
+      required: [temporada, apertura, cierre]
+      properties:
+        temporada:
+          type: integer
+          example: 2027
+        apertura:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-11-01T08:00:00-03:00'
+        cierre:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-11-30T20:00:00-03:00'
+
+    PeriodoInscripcionEntrada:
+      type: object
+      required: [apertura, cierre]
+      properties:
+        apertura:
+          type: string
+          format: date-time
+          description: Fecha y hora de apertura en hora argentina, sin zona horaria.
+          example: '2026-11-01T08:00'
+        cierre:
+          type: string
+          format: date-time
+          description: Fecha y hora de cierre en hora argentina, sin zona horaria.
+          example: '2026-11-30T20:00'
+
+    ConfiguracionTemporada:
+      type: object
+      required: [temporada, edad_minima, edad_maxima]
+      properties:
+        temporada:
+          type: integer
+          minimum: 1
+          maximum: 9999
+          example: 2027
+        edad_minima:
+          type: integer
+          minimum: 0
+          example: 6
+        edad_maxima:
+          type: integer
+          minimum: 0
+          example: 12
+
+    TemporadaHistorial:
+      type: object
+      required: [temporada, activa, turnos, inscripciones]
+      properties:
+        temporada:
+          type: integer
+          minimum: 1
+          maximum: 9999
+          example: 2027
+        activa:
+          type: boolean
+          example: true
+        turnos:
+          type: integer
+          minimum: 0
+          example: 3
+        inscripciones:
+          type: integer
+          minimum: 0
+          example: 12
+
+    TurnoNuevo:
+      type: object
+      required: [nombre, sede, fecha_desde, fecha_hasta, cupo_total]
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: Turno mañana - Enero
+        sede:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: Polideportivo Municipal
+        fecha_desde:
+          type: string
+          format: date
+          example: '2027-01-06'
+        fecha_hasta:
+          type: string
+          format: date
+          example: '2027-01-24'
+        cupo_total:
+          type: integer
+          minimum: 0
+          maximum: 600
+          example: 150
+
+    CopiarTurnosEntrada:
+      type: object
+      properties:
+        temporada_origen:
+          type: integer
+          minimum: 1
+          maximum: 9999
+          nullable: true
+          description: Temporada desde la que se copian los turnos. Si se omite, se usa la última anterior con turnos.
+          example: 2027
+
+    DistribucionCuposEntrada:
+      type: object
+      required: [temporada, turnos]
+      properties:
+        temporada:
+          type: integer
+          minimum: 1
+          maximum: 9999
+          example: 2027
+        turnos:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [turno_id, cupo_total]
+            properties:
+              turno_id:
+                type: integer
+                minimum: 1
+                example: 1
+              cupo_total:
+                type: integer
+                minimum: 0
+                maximum: 600
+                example: 150
 
     ProblemDetails:
       description: Formato de error estándar (RFC 9457, antes RFC 7807)
@@ -615,12 +1260,21 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetails'
-          example:
-            type: /problemas/inscripcion-duplicada
-            title: Inscripción duplicada
-            status: 409
-            detail: El chico ya está inscripto en esta temporada
-            instance: /api/v1/inscripciones
+          examples:
+            duplicada:
+              value:
+                type: /problemas/inscripcion-duplicada
+                title: Inscripción duplicada
+                status: 409
+                detail: El chico ya está inscripto en esta temporada
+                instance: /api/v1/inscripciones
+            periodo:
+              value:
+                type: /problemas/periodo-no-abierto
+                title: Período de inscripción no abierto
+                status: 409
+                detail: El período de inscripción está cerrado.
+                instance: /api/v1/inscripciones
 
     DatosInvalidos:
       description: Los datos no cumplen las validaciones o reglas de negocio

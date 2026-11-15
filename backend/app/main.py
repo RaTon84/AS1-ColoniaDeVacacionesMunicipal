@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.core.errors import registrar_manejadores
 from app.api.system import router as system_router
+from app.modules.turnos.routes import admin_router as admin_turnos_router
 from app.modules.turnos.routes import router as turnos_router
 from app.modules.inscripciones.routes import router as inscripciones_router
 from app.modules.administracion.routes import router as admin_router
@@ -17,7 +18,7 @@ app=FastAPI(title=settings.app_name,version="1.0.0",docs_url=None,redoc_url=None
 registrar_manejadores(app)
 # Swagger UI corre en otro origen (puerto 8082) y llama a la API desde el navegador.
 app.add_middleware(CORSMiddleware,allow_origins=settings.cors_origins,allow_methods=["*"],allow_headers=["*"])
-for router in (system_router,turnos_router,inscripciones_router,admin_router): app.include_router(router)
+for router in (system_router,turnos_router,inscripciones_router,admin_router,admin_turnos_router): app.include_router(router)
 
 static_dir=Path(__file__).parent/"static"
 if static_dir.exists():

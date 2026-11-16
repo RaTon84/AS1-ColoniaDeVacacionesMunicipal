@@ -2,7 +2,6 @@
 import TurnoCard from '../../components/TurnoCard'
 import type { Turno } from '../../types/turno'
 
-// Datos de prueba 
 const turnosEjemplo: Turno[] = [
   {
     id: 1,

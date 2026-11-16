@@ -1,50 +1,11 @@
 import { Link } from "react-router-dom";
-import {
-  ClipboardList,
-  CheckCircle2,
-  ListOrdered,
-  Plus,
-  Info,
-  CalendarDays,
-} from "lucide-react";
-
+import {ClipboardList, CheckCircle2, ListOrdered, Plus, Info, CalendarDays,} from "lucide-react";
 import { useEffect, useState } from "react";
 import keycloak from "../../auth/keycloak";
-import {
-  obtenerInscripcionesRegistradas,
-  type InscripcionAdministracion,
-} from "../../services/inscripciones";
-
+import { obtenerInscripcionesRegistradas, type InscripcionAdministracion,} from "../../services/inscripciones";
+import ResumenCard from "../../components/ResumenCard";
 import { obtenerTurnos } from '../../services/turnos'
 import type { Turno } from '../../types/turno'
-
-
-
-interface ResumenCardProps {
-  titulo: string;
-  cantidad: number;
-  icono: React.ReactNode;
-  fondoIcono: string;
-}
-
-function ResumenCard({
-  titulo,
-  cantidad,
-  icono,
-  fondoIcono,
-}: ResumenCardProps) {
-  return (
-    <article className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-      <div className={`rounded-xl p-3 ${fondoIcono}`}>{icono}</div>
-
-      <div>
-        <p className="text-sm text-slate-500">{titulo}</p>
-
-        <p className="text-2xl font-extrabold text-[#142D50]">{cantidad}</p>
-      </div>
-    </article>
-  );
-}
 
 interface DisponibilidadCuposProps {
   turnos: Turno[]
@@ -272,28 +233,28 @@ function GestionInscripcionPage() {
         >
           <ResumenCard
             titulo="Confirmadas"
-            cantidad={confirmadas}
+            valor={confirmadas}
             icono={<CheckCircle2 size={26} />}
             fondoIcono="bg-emerald-100 text-emerald-700"
           />
 
           <ResumenCard
             titulo="Lista de espera"
-            cantidad={enEspera}
+            valor={enEspera}
             icono={<ListOrdered size={26} />}
             fondoIcono="bg-violet-100 text-violet-700"
           />
 
           <ResumenCard
             titulo="Canceladas"
-            cantidad={canceladas}
+            valor={canceladas}
             icono={<ClipboardList size={26} />}
             fondoIcono="bg-red-100 text-red-700"
           />
 
           <ResumenCard
             titulo="Total"
-            cantidad={total}
+            valor={total}
             icono={<ClipboardList size={26} />}
             fondoIcono="bg-blue-100 text-blue-700"
           />

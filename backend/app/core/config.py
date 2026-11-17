@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     padron_base_url: str = "http://wiremock:8080"
     padron_timeout_seconds: float = 3.0
     temporada: int = 2027
+    # Datos de demostración en una instalación nueva: un turno casi completo (ver app/seed_demo.py).
+    seed_demo: bool = False
     keycloak_issuer_url: str = "http://localhost:8080/realms/colonia"
     keycloak_internal_url: str = "http://keycloak:8080/realms/colonia"
     keycloak_client_id: str = "colonia-spa"

@@ -18,6 +18,7 @@ from app.modules.inscripciones.schemas import AdminInscripcionOut
 from app.modules.turnos.model import Turno
 from app.modules.turnos.repository import TurnoRepository
 from app.modules.turnos.schemas import TurnoOut
+from app.seed import crear_turnos_base
 
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Administración"])
@@ -159,6 +160,18 @@ def guardar_configuracion_temporada(
             },
         )
     )
+    turno_existente = db.scalar(
+        select(Turno.id)
+        .where(Turno.temporada == payload.temporada)
+        .limit(1)
+    )
+
+    if turno_existente is None:
+        db.add_all(crear_turnos_base(payload.temporada))
+
+    db.commit()
+
+    return payload
     db.commit()
 
     return payload

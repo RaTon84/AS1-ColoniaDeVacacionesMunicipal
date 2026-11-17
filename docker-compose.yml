@@ -142,8 +142,8 @@ services:
     volumes:
       - ./verificacion:/verificacion
       - ./backend:/backend:ro
-    depends_on:
-      - app
+    # Sin depends_on: se corre con el sistema ya levantado (el script espera a /api/v1/health).
+    # Así `run` no vuelve a ejecutar keycloak-init ni recrea la cadena de arranque.
 
 volumes:
   postgres_data:

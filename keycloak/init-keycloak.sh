@@ -9,12 +9,21 @@ CLIENT_ID=colonia-admin-api
 
 echo "Esperando a Keycloak..."
 
+# Keycloak ya está sano (healthcheck), así que en general entra al primer intento.
+# Si a los 20 intentos (~1 min) no puede iniciar sesión, corta y muestra el error.
+intentos=0
 until "$KCADM" config credentials \
   --server "$SERVER" \
   --realm master \
   --user "$KEYCLOAK_ADMIN_USERNAME" \
-  --password "$KEYCLOAK_ADMIN_PASSWORD" >/dev/null 2>&1
+  --password "$KEYCLOAK_ADMIN_PASSWORD" >/tmp/login.log 2>&1
 do
+  intentos=$((intentos + 1))
+  if [ "$intentos" -ge 20 ]; then
+    echo "ERROR: no se pudo iniciar sesión en Keycloak. Revisar KEYCLOAK_ADMIN_USERNAME y KEYCLOAK_ADMIN_PASSWORD."
+    cat /tmp/login.log
+    exit 1
+  fi
   sleep 3
 done
 

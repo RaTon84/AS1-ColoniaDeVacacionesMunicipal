@@ -11,7 +11,7 @@ import uuid
 import httpx
 import pytest
 
-os.environ.setdefault("AUTH_ENABLED", "false")  # usuario de desarrollo con todos los roles
+os.environ["AUTH_ENABLED"] = "false"  # usuario de desarrollo con todos los roles (pisa el valor del contenedor)
 
 from app.core.errors import CambioNoPermitido, IdentidadNoDisponible, UsuarioDuplicado, UsuarioInexistente
 from app.integrations.keycloak_admin import KeycloakAdminClient

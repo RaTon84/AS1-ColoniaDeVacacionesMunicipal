@@ -305,7 +305,13 @@ def principal():
     # --- Concurrencia: el último cupo
     _, _, turnos, _ = llamar("GET", "/api/v1/turnos", t["sysadmin"])
     original = {x["id"]: x["cupo_total"] for x in turnos}
-    turno = next(x for x in turnos if x["id"] == turno["id"])
+    # Un turno con lugar: dejarle 1 libre le baja el cupo. Agrandar uno lleno (p. ej. el que deja
+    # seed_demo) puede pasar el máximo de cupos de la temporada y la API responde 422.
+    turno = next((x for x in turnos if x["cupos_disponibles"] > 0), None)
+    if turno is None:
+        registrar("NFR-04 Integridad", "Preparar un turno con 1 solo cupo libre", "un turno con lugar",
+                  "todos los turnos están completos", False)
+        return guardar("principal")
     confirmadas = turno["cupo_total"] - turno["cupos_disponibles"]
     distribucion = {"temporada": temporada,
                     "turnos": [{"turno_id": i, "cupo_total": (confirmadas + 1 if i == turno["id"] else c)}

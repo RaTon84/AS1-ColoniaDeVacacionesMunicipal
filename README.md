@@ -74,9 +74,12 @@ Si ya tenías el sistema levantado de antes, recreá Keycloak para que importe e
 
 ## DNIs de prueba del padrón
 
-| DNI | Respuesta del mock |
+El padrón se consulta con el **DNI del chico**.
+
+| DNI del chico | Respuesta del mock |
 |---|---|
-| `30111222`, `30222333`, `30333444` | Residente |
+| `53148263`, `53871642`, `54529317`, `55268431`, `55736924`, `56319587`, `57042863`, `57861429`, `58623741`, `59348276` | Residente |
+| 10 dígitos que empiezan con `9` (por ejemplo `9000000001`) | Residente (reservados para la verificación automática) |
 | `50000000` | Padrón caído (503) |
 | Cualquier otro | No residente |
 

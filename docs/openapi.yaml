@@ -129,7 +129,7 @@ paths:
               $ref: '#/components/schemas/InscripcionNueva'
             example:
               turno_id: 1
-              dni_chico: '50111222'
+              dni_chico: '53148263'
               nombre_chico: Juan
               apellido_chico: Perez
               fecha_nacimiento: '2017-06-15'
@@ -1176,7 +1176,7 @@ components:
                 type: /problemas/no-residente
                 title: No figura en el padrón de residentes
                 status: 422
-                detail: El tutor no figura con domicilio en la jurisdicción
+                detail: El niño no figura con domicilio en la jurisdicción
                 instance: /api/v1/inscripciones
             validacion:
               value:

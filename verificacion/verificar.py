@@ -39,7 +39,9 @@ SALIDA = pathlib.Path(os.environ.get("RESULTADOS", "/verificacion/resultados"))
 BACKEND = pathlib.Path(os.environ.get("BACKEND_DIR", "/backend"))
 USUARIOS = {"tutor": ("tutor1", "Tutor123!"), "admin": ("admin1", "Admin123!"),
             "sysadmin": ("sysadmin1", "SysAdmin123!")}
-DNI_RESIDENTE, DNI_NO_RESIDENTE, DNI_PADRON_CAIDO = "30111222", "12345678", "50000000"
+# El padrón se consulta con el DNI del chico. Los DNIs de 10 dígitos que empiezan con 9 son residentes
+# en el mock (wiremock/mappings/residente-verificacion.json): así cada corrida usa chicos nuevos.
+DNI_TUTOR, DNI_NO_RESIDENTE, DNI_PADRON_CAIDO = "30111222", "12345678", "50000000"
 CONCURRENTES = int(os.environ.get("CONCURRENTES", "30"))
 
 resultados = []
@@ -138,9 +140,9 @@ def dni_chico():
         return f"9{corrida}{_contador:03d}"
 
 
-def inscripcion(turno_id, nacimiento, dni_tutor=DNI_RESIDENTE, dni=None, email="familia@example.com"):
+def inscripcion(turno_id, nacimiento, dni=None, email="familia@example.com"):
     return {"turno_id": turno_id, "dni_chico": dni or dni_chico(), "nombre_chico": "Prueba",
-            "apellido_chico": "Verificacion", "fecha_nacimiento": nacimiento, "dni_tutor": dni_tutor,
+            "apellido_chico": "Verificacion", "fecha_nacimiento": nacimiento, "dni_tutor": DNI_TUTOR,
             "nombre_tutor": "Tutor", "apellido_tutor": "Prueba", "email_tutor": email,
             "telefono_tutor": "1144445555"}
 
@@ -283,8 +285,8 @@ def principal():
     registrar("NFR-04 Integridad", "El mismo chico otra vez en la temporada", "409 inscripcion-duplicada",
               f"{s} {tipo(c)}", s == 409 and tipo(c) == "/problemas/inscripcion-duplicada")
 
-    s, _, c, _ = llamar("POST", "/api/v1/inscripciones", t["tutor"], inscripcion(turno["id"], nacimiento_ok, DNI_NO_RESIDENTE))
-    registrar("NFR-04 Integridad", "Tutor que no figura en el padrón", "422 no-residente",
+    s, _, c, _ = llamar("POST", "/api/v1/inscripciones", t["tutor"], inscripcion(turno["id"], nacimiento_ok, dni=DNI_NO_RESIDENTE))
+    registrar("NFR-04 Integridad", "Chico que no figura en el padrón", "422 no-residente",
               f"{s} {tipo(c)}", s == 422 and tipo(c) == "/problemas/no-residente")
 
     s, _, c, _ = llamar("POST", "/api/v1/inscripciones", t["tutor"], inscripcion(turno["id"], nacimiento_chico_chico))
@@ -368,11 +370,11 @@ def principal():
     registrar("NFR-04 Integridad", "Restaurar la distribución de cupos original", "200", str(s), s == 200)
 
     # --- Padrón con falla
-    chico = inscripcion(turno["id"], nacimiento_ok, DNI_PADRON_CAIDO)
+    chico = inscripcion(turno["id"], nacimiento_ok, dni=DNI_PADRON_CAIDO)
     s, h, c, ms = llamar("POST", "/api/v1/inscripciones", t["tutor"], chico)
     _, _, todas, _ = llamar("GET", "/api/v1/admin/inscripciones", t["admin"])
     creada = any(x["dni_chico"] == chico["dni_chico"] for x in todas)
-    registrar("NFR-06 Disponibilidad", "El padrón responde con error (DNI 50000000)",
+    registrar("NFR-06 Disponibilidad", "El padrón responde con error (DNI del chico 50000000)",
               "503 padron-no-disponible + Retry-After, sin inscripción creada",
               f"{s} {tipo(c)} · Retry-After {h.get('Retry-After')} · creada: {'sí' if creada else 'no'} · {ms:.0f} ms",
               s == 503 and tipo(c) == "/problemas/padron-no-disponible" and h.get("Retry-After") and not creada)

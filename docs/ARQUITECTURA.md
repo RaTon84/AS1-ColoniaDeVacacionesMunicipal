@@ -23,7 +23,7 @@ Reglas de negocio:
 | Regla | Detalle |
 |---|---|
 | Edad | Entre 6 y 12 años al 1 de enero de la temporada (el rango se configura por temporada) |
-| Residencia | Solo tutores con domicilio en la jurisdicción, según el padrón de residentes (sistema externo) |
+| Residencia | Solo chicos con domicilio en la jurisdicción (se consulta con el DNI del chico), según el padrón de residentes (sistema externo) |
 | Cupo | Cada turno tiene un cupo; nunca puede haber más inscripciones confirmadas que cupos |
 | Orden de llegada | Los cupos se asignan en el orden en que llegan los pedidos; los que llegan con el turno lleno quedan en lista de espera, en orden |
 | Inscripción única | Un chico no puede tener más de una inscripción activa (confirmada o en espera) en la temporada; si se cancela, puede volver a inscribirse |
@@ -110,7 +110,7 @@ flowchart LR
 | RF-03 | Consultar los turnos de la temporada y sus cupos disponibles |
 | RF-04 | Inscribir a un chico en un turno (el tutor o un administrativo en su nombre) |
 | RF-05 | Validar que el chico tenga la edad admitida al inicio de la temporada |
-| RF-06 | Verificar la residencia del tutor contra el padrón municipal |
+| RF-06 | Verificar la residencia del chico contra el padrón municipal, con su DNI |
 | RF-07 | Impedir que un chico tenga más de una inscripción activa en la temporada |
 | RF-08 | Impedir que las inscripciones confirmadas superen el cupo del turno, aun con pedidos simultáneos |
 | RF-09 | Registrar en lista de espera, con su posición, los pedidos que llegan con el turno lleno |
@@ -175,7 +175,7 @@ flowchart TB
   adm -- "Inscribe y consulta listados" --> colonia
   sys -- "Configura y supervisa" --> colonia
   colonia -- "Delega el login (OIDC)" --> idp
-  colonia -- "¿El tutor es residente? (REST)" --> padron
+  colonia -- "¿El chico es residente? (REST, por DNI)" --> padron
 
   classDef persona fill:#08427b,color:#fff,stroke:#052e56
   classDef sistema fill:#1168bd,color:#fff,stroke:#0b4884

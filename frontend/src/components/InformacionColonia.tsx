@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 import {
   CalendarDays,
   CalendarCheck,
@@ -10,125 +10,177 @@ import {
   Palette,
   Trees,
   Sun,
-} from 'lucide-react'
-import keycloak from '../auth/keycloak'
-import { obtenerTurnos } from '../services/turnos'
-import { obtenerTemporadaActiva } from '../services/inscripciones'
+} from "lucide-react";
+import keycloak from "../auth/keycloak";
+import { obtenerTurnos } from "../services/turnos";
+import {
+  obtenerEstadoPeriodoInscripcion,
+  obtenerTemporadaActiva,
+} from "../services/inscripciones";
 
 const actividades = [
-  { nombre: 'Natación', icono: Waves, estilo: 'bg-sky-50 text-sky-600' },
-  { nombre: 'Deportes', icono: Volleyball, estilo: 'bg-orange-50 text-orange-600' },
-  { nombre: 'Talleres', icono: Palette, estilo: 'bg-pink-50 text-pink-600' },
-  { nombre: 'Naturaleza', icono: Trees, estilo: 'bg-green-50 text-green-700' },
-  { nombre: 'Juegos grupales', icono: UsersRound, estilo: 'bg-violet-50 text-violet-700' },
-  { nombre: 'Recreación', icono: Sun, estilo: 'bg-amber-50 text-amber-600' },
-]
+  { nombre: "Natación", icono: Waves, estilo: "bg-sky-50 text-sky-600" },
+  {
+    nombre: "Deportes",
+    icono: Volleyball,
+    estilo: "bg-orange-50 text-orange-600",
+  },
+  { nombre: "Talleres", icono: Palette, estilo: "bg-pink-50 text-pink-600" },
+  { nombre: "Naturaleza", icono: Trees, estilo: "bg-green-50 text-green-700" },
+  {
+    nombre: "Juegos grupales",
+    icono: UsersRound,
+    estilo: "bg-violet-50 text-violet-700",
+  },
+  { nombre: "Recreación", icono: Sun, estilo: "bg-amber-50 text-amber-600" },
+];
 
 const estiloTarjeta =
-  'min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm'
+  "min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
 
-const estiloTitulo = 'mb-3 text-lg font-bold text-[#142D50]'
+const estiloTitulo = "mb-3 text-lg font-bold text-[#142D50]";
 
 function InformacionColonia() {
-  const [cuposPrevistos, setCuposPrevistos] = useState<number | null>(null)
-  const [errorCupos, setErrorCupos] = useState(false)
+  const [cuposPrevistos, setCuposPrevistos] = useState<number | null>(null);
+  const [errorCupos, setErrorCupos] = useState(false);
   const [fechasColonia, setFechasColonia] = useState<{
-    inicio: string | null
-    fin: string | null
-  }>({ inicio: null, fin: null })
-  const [edades, setEdades] = useState<{ minima: number; maxima: number } | null>(null)
-  const [errorEdades, setErrorEdades] = useState(false)
+    inicio: string | null;
+    fin: string | null;
+  }>({ inicio: null, fin: null });
+  const [edades, setEdades] = useState<{
+    minima: number;
+    maxima: number;
+  } | null>(null);
+  const [errorEdades, setErrorEdades] = useState(false);
+  const [periodoInscripcion, setPeriodoInscripcion] = useState("Cargando…");
 
   useEffect(() => {
-    let activo = true
+    let activo = true;
 
     async function cargarCupos() {
       try {
-        await keycloak.updateToken(30)
+        await keycloak.updateToken(30);
 
-        const token = keycloak.token
-        if (!token) throw new Error('No hay una sesión activa.')
+        const token = keycloak.token;
+        if (!token) throw new Error("No hay una sesión activa.");
 
-        const turnos = await obtenerTurnos(token)
-        if (!activo) return
+        const turnos = await obtenerTurnos(token);
+        if (!activo) return;
 
-        const total = turnos.reduce((suma, turno) => suma + turno.cupo_total, 0)
-        const fechasInicio = turnos.map((turno) => turno.fecha_desde).sort()
-        const fechasFin = turnos.map((turno) => turno.fecha_hasta).sort()
+        const total = turnos.reduce(
+          (suma, turno) => suma + turno.cupo_total,
+          0,
+        );
+        const fechasInicio = turnos.map((turno) => turno.fecha_desde).sort();
+        const fechasFin = turnos.map((turno) => turno.fecha_hasta).sort();
 
-        setCuposPrevistos(total)
+        setCuposPrevistos(total);
         setFechasColonia({
           inicio: fechasInicio[0] ?? null,
           fin: fechasFin[fechasFin.length - 1] ?? null,
-        })
+        });
       } catch {
-        if (activo) setErrorCupos(true)
+        if (activo) setErrorCupos(true);
       }
     }
 
     async function cargarEdades() {
       try {
-        await keycloak.updateToken(30)
+        await keycloak.updateToken(30);
 
-        const token = keycloak.token
-        if (!token) throw new Error('No hay una sesión activa.')
+        const token = keycloak.token;
+        if (!token) throw new Error("No hay una sesión activa.");
 
-        const temporada = await obtenerTemporadaActiva(token)
-        if (!activo) return
+        const temporada = await obtenerTemporadaActiva(token);
+        if (!activo) return;
 
-        setEdades({ minima: temporada.edad_minima, maxima: temporada.edad_maxima })
+        setEdades({
+          minima: temporada.edad_minima,
+          maxima: temporada.edad_maxima,
+        });
       } catch {
-        if (activo) setErrorEdades(true)
+        if (activo) setErrorEdades(true);
       }
     }
+    async function cargarPeriodoInscripcion() {
+      try {
+        await keycloak.updateToken(30);
 
-    void cargarCupos()
-    void cargarEdades()
+        const token = keycloak.token;
+        if (!token) throw new Error("No hay una sesión activa.");
+
+        const { apertura, cierre } =
+          await obtenerEstadoPeriodoInscripcion(token);
+        if (!activo) return;
+
+        if (!apertura || !cierre) {
+          setPeriodoInscripcion("A confirmar");
+          return;
+        }
+
+        const formato = new Intl.DateTimeFormat("es-AR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          timeZone: "America/Argentina/Buenos_Aires",
+        });
+
+        setPeriodoInscripcion(
+          `${formato.format(new Date(apertura))} al ${formato.format(new Date(cierre))}`,
+        );
+      } catch {
+        if (activo) setPeriodoInscripcion("No disponible");
+      }
+    }
+    void cargarCupos();
+    void cargarEdades();
+    void cargarPeriodoInscripcion();
 
     return () => {
-      activo = false
-    }
-  }, [])
+      activo = false;
+    };
+  }, []);
 
   const datosColonia = [
     {
-      titulo: 'Inicio',
-      valor: fechasColonia.inicio?.split('-').reverse().join('/') ?? 'A confirmar',
+      titulo: "Inicio",
+      valor:
+        fechasColonia.inicio?.split("-").reverse().join("/") ?? "A confirmar",
       icono: CalendarDays,
-      color: 'text-blue-600',
+      color: "text-blue-600",
     },
     {
-      titulo: 'Fin',
-      valor: fechasColonia.fin?.split('-').reverse().join('/') ?? 'A confirmar',
+      titulo: "Fin",
+      valor: fechasColonia.fin?.split("-").reverse().join("/") ?? "A confirmar",
       icono: CalendarCheck,
-      color: 'text-pink-500',
+      color: "text-pink-500",
     },
     {
-      titulo: 'Edades',
+      titulo: "Edades",
       valor: errorEdades
-        ? 'No disponible'
+        ? "No disponible"
         : edades
           ? `${edades.minima} a ${edades.maxima} años`
-          : 'Cargando…',
+          : "Cargando…",
       icono: UsersRound,
-      color: 'text-violet-600',
+      color: "text-violet-600",
     },
-  ]
+  ];
 
   const datosInscripciones = [
     {
-      titulo: 'Cupos previstos',
-      valor: errorCupos ? 'No disponible' : (cuposPrevistos ?? 'Cargando…'),
+      titulo: "Cupos previstos",
+      valor: errorCupos ? "No disponible" : (cuposPrevistos ?? "Cargando…"),
       icono: UsersRound,
-      estilo: 'bg-blue-50 text-blue-700',
+      estilo: "bg-blue-50 text-blue-700",
     },
     {
-      titulo: 'Período de inscripción',
-      valor: '3 semanas',
+      titulo: "Período de inscripción",
+      valor: periodoInscripcion,
       icono: Clock3,
-      estilo: 'bg-violet-50 text-violet-700',
+      estilo: "bg-violet-50 text-violet-700",
     },
-  ]
+  ];
 
   return (
     <section
@@ -144,7 +196,11 @@ function InformacionColonia() {
               key={titulo}
               className="flex min-w-0 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"
             >
-              <Icono size={22} className={`shrink-0 ${color}`} aria-hidden="true" />
+              <Icono
+                size={22}
+                className={`shrink-0 ${color}`}
+                aria-hidden="true"
+              />
               <div>
                 <dt className="text-xs text-slate-600">{titulo}</dt>
                 <dd className="text-sm font-bold text-[#142D50]">{valor}</dd>
@@ -156,7 +212,11 @@ function InformacionColonia() {
 
       <article className={`${estiloTarjeta} lg:col-span-5`}>
         <h2 className={`${estiloTitulo} flex items-center gap-2`}>
-          <ClipboardList size={21} className="text-orange-500" aria-hidden="true" />
+          <ClipboardList
+            size={21}
+            className="text-orange-500"
+            aria-hidden="true"
+          />
           Inscripciones
         </h2>
 
@@ -185,10 +245,14 @@ function InformacionColonia() {
               key={nombre}
               className="flex min-w-0 flex-col items-center gap-1.5 text-center"
             >
-              <span className={`grid h-10 w-10 place-items-center rounded-xl ${estilo}`}>
+              <span
+                className={`grid h-10 w-10 place-items-center rounded-xl ${estilo}`}
+              >
                 <Icono size={22} aria-hidden="true" />
               </span>
-              <span className="text-xs font-medium text-[#142D50]">{nombre}</span>
+              <span className="text-xs font-medium text-[#142D50]">
+                {nombre}
+              </span>
             </li>
           ))}
         </ul>
@@ -211,7 +275,7 @@ function InformacionColonia() {
         />
       </article>
     </section>
-  )
+  );
 }
 
-export default InformacionColonia
+export default InformacionColonia;

@@ -72,11 +72,25 @@ una clave temporal que hay que cambiar en el primer ingreso.
 Si ya tenías el sistema levantado de antes, recreá Keycloak para que importe el realm actualizado:
 `docker compose up -d --force-recreate keycloak` (se pierden las cuentas creadas a mano).
 
+## Datos de demostración (lista de espera)
+
+Al crear la base por primera vez, el **Turno mañana - Enero** queda con 148 de 150 cupos ocupados
+(inscripciones de prueba con DNIs de chico que empiezan con `8`). Con dos inscripciones más se llena,
+y a partir de la tercera van a lista de espera; cancelando una confirmada se ve la promoción.
+
+- Lo controla `SEED_DEMO` (en `true` por defecto en el `docker-compose`). En el servidor real: `SEED_DEMO=false`.
+- Solo corre con la base vacía. Para volver a empezar: `docker compose down -v && docker compose up -d --build`.
+- A mano, sobre otro turno o con otros cupos libres:
+  `docker compose exec app python -m app.seed_demo --turno 3 --libres 1`.
+
 ## DNIs de prueba del padrón
 
-| DNI | Respuesta del mock |
+El padrón se consulta con el **DNI del chico**.
+
+| DNI del chico | Respuesta del mock |
 |---|---|
-| `30111222`, `30222333`, `30333444` | Residente |
+| `53148263`, `53871642`, `54529317`, `55268431`, `55736924`, `56319587`, `57042863`, `57861429`, `58623741`, `59348276` | Residente |
+| 10 dígitos que empiezan con `9` (por ejemplo `9000000001`) | Residente (reservados para la verificación automática) |
 | `50000000` | Padrón caído (503) |
 | Cualquier otro | No residente |
 

@@ -4,6 +4,7 @@ from app.core.config import get_settings
 from app.core.database import SessionLocal
 from app.modules.turnos.model import Turno
 from app.modules.inscripciones.model import Inscripcion  # registra el modelo relacionado en SQLAlchemy
+from app.seed_demo import seed_demo
 
 def seed():
     settings=get_settings()
@@ -15,4 +16,6 @@ def seed():
             Turno(nombre="Turno mañana - Febrero",sede="Club Municipal",fecha_desde=date(settings.temporada,2,2),fecha_hasta=date(settings.temporada,2,20),cupo_total=150,temporada=settings.temporada),
             Turno(nombre="Turno tarde - Febrero",sede="Club Municipal",fecha_desde=date(settings.temporada,2,2),fecha_hasta=date(settings.temporada,2,20),cupo_total=150,temporada=settings.temporada),
         ]); db.commit()
+    # Solo en una base recién creada: en los reinicios no se vuelve a llenar el turno.
+    if settings.seed_demo: seed_demo()
 if __name__=="__main__": seed()

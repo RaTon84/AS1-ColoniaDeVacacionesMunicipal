@@ -75,6 +75,9 @@ services:
       PADRON_BASE_URL: http://wiremock:8080
       PADRON_TIMEOUT_SECONDS: ${PADRON_TIMEOUT_SECONDS:-3}
       TEMPORADA: ${TEMPORADA:-2027}
+      # Al crear la base, deja el primer turno con 2 cupos libres para probar la lista de espera.
+      # En el servidor real: SEED_DEMO=false en el .env.
+      SEED_DEMO: ${SEED_DEMO:-true}
 
       KEYCLOAK_ISSUER_URL: http://localhost:8080/realms/colonia
       KEYCLOAK_INTERNAL_URL: http://keycloak:8080/realms/colonia

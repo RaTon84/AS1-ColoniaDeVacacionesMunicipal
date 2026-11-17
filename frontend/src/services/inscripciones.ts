@@ -165,3 +165,26 @@ export async function obtenerEstadoPeriodoInscripcion(
 
   return respuesta.json()
 }
+
+export interface TemporadaActiva {
+  temporada: number
+  edad_minima: number
+  edad_maxima: number
+}
+
+export async function obtenerTemporadaActiva(
+  token: string
+): Promise<TemporadaActiva> {
+  const respuesta = await fetch('/api/v1/temporada', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: 'no-store',
+  })
+
+  if (!respuesta.ok) {
+    throw new Error('No se pudo cargar la temporada.')
+  }
+
+  return respuesta.json()
+}

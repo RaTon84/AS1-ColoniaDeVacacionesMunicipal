@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import keycloak from '../auth/keycloak'
 import { obtenerTurnos } from '../services/turnos'
+import { obtenerTemporadaActiva } from '../services/inscripciones'
 
 const actividades = [
   { nombre: 'Natación', icono: Waves, estilo: 'bg-sky-50 text-sky-600' },
@@ -35,6 +36,8 @@ function InformacionColonia() {
     inicio: string | null
     fin: string | null
   }>({ inicio: null, fin: null })
+  const [edades, setEdades] = useState<{ minima: number; maxima: number } | null>(null)
+  const [errorEdades, setErrorEdades] = useState(false)
 
   useEffect(() => {
     let activo = true
@@ -63,7 +66,24 @@ function InformacionColonia() {
       }
     }
 
+    async function cargarEdades() {
+      try {
+        await keycloak.updateToken(30)
+
+        const token = keycloak.token
+        if (!token) throw new Error('No hay una sesión activa.')
+
+        const temporada = await obtenerTemporadaActiva(token)
+        if (!activo) return
+
+        setEdades({ minima: temporada.edad_minima, maxima: temporada.edad_maxima })
+      } catch {
+        if (activo) setErrorEdades(true)
+      }
+    }
+
     void cargarCupos()
+    void cargarEdades()
 
     return () => {
       activo = false
@@ -85,7 +105,11 @@ function InformacionColonia() {
     },
     {
       titulo: 'Edades',
-      valor: '6 a 12 años',
+      valor: errorEdades
+        ? 'No disponible'
+        : edades
+          ? `${edades.minima} a ${edades.maxima} años`
+          : 'Cargando…',
       icono: UsersRound,
       color: 'text-violet-600',
     },

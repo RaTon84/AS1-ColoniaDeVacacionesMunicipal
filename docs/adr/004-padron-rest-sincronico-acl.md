@@ -5,7 +5,7 @@
 
 ## Contexto y problema
 
-Solo pueden inscribirse chicos cuyo tutor tiene domicilio en la jurisdicción, y eso lo sabe un sistema
+Solo pueden inscribirse chicos con domicilio en la jurisdicción (se consulta con el DNI del chico), y eso lo sabe un sistema
 externo: el padrón de residentes, que no controlamos y que para el TP se simula con WireMock. El padrón
 puede estar lento o caído. ¿Cómo nos integramos con él sin que sus detalles ni sus fallas rompan las
 reglas de negocio?

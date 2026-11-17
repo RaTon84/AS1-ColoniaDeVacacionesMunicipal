@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, UsersRound, Plus, Info } from "lucide-react";
 import InscripcionesCard from "../../components/InscripcionesCard";
-import type { Inscripcion } from "../../data/inscripcionesEjemplo";
+import { adaptarInscripcion } from "../../utils/adaptarInscripcion";
+import type { Inscripcion } from "../../types/inscripcion";
 import keycloak from "../../auth/keycloak";
-import { obtenerInscripcionesRegistradas, cancelarInscripcion,} from "../../services/inscripciones";
+import {
+  obtenerInscripcionesRegistradas,
+  cancelarInscripcion,
+} from "../../services/inscripciones";
 import { obtenerTurnos } from "../../services/turnos";
 import type { Turno } from "../../types/turno";
 
@@ -13,7 +17,6 @@ type FiltroEstado = "Todas" | Inscripcion["estado"];
 function InscripcionesRegistradasPage() {
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>("Todas");
-
   const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [errorCarga, setErrorCarga] = useState("");
@@ -42,24 +45,9 @@ function InscripcionesRegistradasPage() {
           obtenerTurnos(token),
         ]);
 
-        const estados: Record<string, Inscripcion["estado"]> = {
-          CONFIRMADA: "Confirmada",
-          LISTA_ESPERA: "Lista de espera",
-          CANCELADA: "Cancelada",
-        };
-
-        const datos: Inscripcion[] = registros.map((registro) => {
-          const turno = turnos.find((turno) => turno.id === registro.turno_id);
-
-          return {
-            ...registro,
-            turno: turno?.nombre ?? `Turno ${registro.turno_id}`,
-            sede: turno?.sede ?? "Sede no disponible",
-            fecha_inscripcion: registro.creado_en.slice(0, 10),
-            estado: estados[registro.estado],
-            posicion_espera: registro.posicion_espera ?? undefined,
-          };
-        });
+        const datos = registros.map((registro) =>
+          adaptarInscripcion(registro, turnos),
+        );
 
         if (activo) {
           setInscripciones(datos);

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   CalendarDays,
   CalendarCheck,
@@ -9,167 +10,172 @@ import {
   Palette,
   Trees,
   Sun,
-} from "lucide-react";
+} from 'lucide-react'
+import keycloak from '../auth/keycloak'
+import { obtenerTurnos } from '../services/turnos'
+
+const actividades = [
+  { nombre: 'Natación', icono: Waves, estilo: 'bg-sky-50 text-sky-600' },
+  { nombre: 'Deportes', icono: Volleyball, estilo: 'bg-orange-50 text-orange-600' },
+  { nombre: 'Talleres', icono: Palette, estilo: 'bg-pink-50 text-pink-600' },
+  { nombre: 'Naturaleza', icono: Trees, estilo: 'bg-green-50 text-green-700' },
+  { nombre: 'Juegos grupales', icono: UsersRound, estilo: 'bg-violet-50 text-violet-700' },
+  { nombre: 'Recreación', icono: Sun, estilo: 'bg-amber-50 text-amber-600' },
+]
+
+const estiloTarjeta =
+  'min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm'
+
+const estiloTitulo = 'mb-3 text-lg font-bold text-[#142D50]'
 
 function InformacionColonia() {
-  const actividades = [
+  const [cuposPrevistos, setCuposPrevistos] = useState<number | null>(null)
+  const [errorCupos, setErrorCupos] = useState(false)
+  const [fechasColonia, setFechasColonia] = useState<{
+    inicio: string | null
+    fin: string | null
+  }>({ inicio: null, fin: null })
+
+  useEffect(() => {
+    let activo = true
+
+    async function cargarCupos() {
+      try {
+        await keycloak.updateToken(30)
+
+        const token = keycloak.token
+        if (!token) throw new Error('No hay una sesión activa.')
+
+        const turnos = await obtenerTurnos(token)
+        if (!activo) return
+
+        const total = turnos.reduce((suma, turno) => suma + turno.cupo_total, 0)
+        const fechasInicio = turnos.map((turno) => turno.fecha_desde).sort()
+        const fechasFin = turnos.map((turno) => turno.fecha_hasta).sort()
+
+        setCuposPrevistos(total)
+        setFechasColonia({
+          inicio: fechasInicio[0] ?? null,
+          fin: fechasFin[fechasFin.length - 1] ?? null,
+        })
+      } catch {
+        if (activo) setErrorCupos(true)
+      }
+    }
+
+    void cargarCupos()
+
+    return () => {
+      activo = false
+    }
+  }, [])
+
+  const datosColonia = [
     {
-      nombre: "Natación",
-      icono: Waves,
-      color: "text-sky-500",
-      fondo: "bg-sky-50",
+      titulo: 'Inicio',
+      valor: fechasColonia.inicio?.split('-').reverse().join('/') ?? 'A confirmar',
+      icono: CalendarDays,
+      color: 'text-blue-600',
     },
     {
-      nombre: "Deportes",
-      icono: Volleyball,
-      color: "text-orange-500",
-      fondo: "bg-orange-50",
+      titulo: 'Fin',
+      valor: fechasColonia.fin?.split('-').reverse().join('/') ?? 'A confirmar',
+      icono: CalendarCheck,
+      color: 'text-pink-500',
     },
     {
-      nombre: "Talleres",
-      icono: Palette,
-      color: "text-pink-500",
-      fondo: "bg-pink-50",
-    },
-    {
-      nombre: "Naturaleza",
-      icono: Trees,
-      color: "text-green-600",
-      fondo: "bg-green-50",
-    },
-    {
-      nombre: "Juegos grupales",
+      titulo: 'Edades',
+      valor: '6 a 12 años',
       icono: UsersRound,
-      color: "text-violet-600",
-      fondo: "bg-violet-50",
+      color: 'text-violet-600',
+    },
+  ]
+
+  const datosInscripciones = [
+    {
+      titulo: 'Cupos previstos',
+      valor: errorCupos ? 'No disponible' : (cuposPrevistos ?? 'Cargando…'),
+      icono: UsersRound,
+      estilo: 'bg-blue-50 text-blue-700',
     },
     {
-      nombre: "Recreación",
-      icono: Sun,
-      color: "text-amber-500",
-      fondo: "bg-amber-50",
+      titulo: 'Período de inscripción',
+      valor: '3 semanas',
+      icono: Clock3,
+      estilo: 'bg-violet-50 text-violet-700',
     },
-  ];
+  ]
 
   return (
     <section
-      className="grid grid-cols-1 gap-4 xl:grid-cols-5"
       aria-label="Información general de la colonia"
+      className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-12"
     >
-      <article className="rounded-2xl bg-white p-6 shadow-sm xl:col-span-2">
-        <h2 className="mb-3 text-xl font-bold text-[#142D50]">
-          Información de la colonia
+      <article className={`${estiloTarjeta} lg:col-span-7`}>
+        <h2 className={estiloTitulo}>Información de la colonia</h2>
+
+        <dl className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {datosColonia.map(({ titulo, valor, icono: Icono, color }) => (
+            <div
+              key={titulo}
+              className="flex min-w-0 items-center gap-2 rounded-xl bg-slate-50 px-3 py-2"
+            >
+              <Icono size={22} className={`shrink-0 ${color}`} aria-hidden="true" />
+              <div>
+                <dt className="text-xs text-slate-600">{titulo}</dt>
+                <dd className="text-sm font-bold text-[#142D50]">{valor}</dd>
+              </div>
+            </div>
+          ))}
+        </dl>
+      </article>
+
+      <article className={`${estiloTarjeta} lg:col-span-5`}>
+        <h2 className={`${estiloTitulo} flex items-center gap-2`}>
+          <ClipboardList size={21} className="text-orange-500" aria-hidden="true" />
+          Inscripciones
         </h2>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4">
-            <CalendarDays size={30} className="shrink-0 text-blue-600" />
-
-            <div>
-              <p className="text-sm text-slate-500">Inicio</p>
-
-              <p className="font-bold text-[#142D50]">A confirmar</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4">
-            <CalendarCheck size={30} className="shrink-0 text-pink-500" />
-
-            <div>
-              <p className="text-sm text-slate-500">Fin</p>
-
-              <p className="font-bold text-[#142D50]">A confirmar</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4">
-            <UsersRound size={30} className="shrink-0 text-violet-600" />
-
-            <div>
-              <p className="text-sm text-slate-500">Edades</p>
-
-              <p className="font-bold text-[#142D50]">6 a 12 años</p>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      <article className="rounded-2xl bg-white p-6 shadow-sm xl:col-span-2">
-        <div className="mb-5 flex items-center gap-3">
-          <ClipboardList size={27} className="text-orange-500" />
-
-          <h2 className="text-2xl font-bold text-[#142D50]">Inscripciones</h2>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-          <div className="rounded-xl bg-blue-50 p-4">
-            <UsersRound size={26} className="mb-2 text-blue-600" />
-
-            <p className="text-xl font-bold text-[#142D50]">600</p>
-
-            <p className="text-sm text-slate-600">Cupos previstos</p>
-          </div>
-
-          <div className="rounded-xl bg-violet-50 p-4">
-            <Clock3 size={26} className="mb-2 text-violet-600" />
-
-            <p className="text-xl font-bold text-[#142D50]">3 semanas</p>
-
-            <p className="text-sm text-slate-600">Período de inscripción</p>
-          </div>
-        </div>
-      </article>
-
-      <article className="rounded-2xl bg-white p-6 shadow-sm xl:col-span-3">
-        <h2 className="mb-3 text-xl font-bold text-[#142D50]">Actividades</h2>
-
-        <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
-          {actividades.map((actividad) => {
-            const Icono = actividad.icono;
-
-            return (
-              <div
-                key={actividad.nombre}
-                className="flex flex-col items-center gap-2 text-center"
-              >
-                <div
-                  className={`
-                    flex h-16 w-16 items-center justify-center
-                    rounded-2xl
-                    ${actividad.fondo}
-                  `}
-                >
-                  <Icono
-                    size={34}
-                    className={actividad.color}
-                    strokeWidth={2}
-                    aria-hidden="true"
-                  />
-                </div>
-
-                <span className="text-sm font-medium text-[#142D50]">
-                  {actividad.nombre}
-                </span>
+        <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {datosInscripciones.map(({ titulo, valor, icono: Icono, estilo }) => (
+            <div
+              key={titulo}
+              className={`flex min-w-0 items-center gap-2 rounded-xl px-3 py-2 ${estilo}`}
+            >
+              <Icono size={22} className="shrink-0" aria-hidden="true" />
+              <div>
+                <dt className="text-xs text-slate-600">{titulo}</dt>
+                <dd className="text-sm font-bold text-[#142D50]">{valor}</dd>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          ))}
+        </dl>
       </article>
 
-      <article className="relative min-h-[180px] overflow-hidden rounded-2xl bg-[#FFF3D8] p-5 shadow-sm xl:col-span-2">
-        <Sun
-          size={80}
-          strokeWidth={1.5}
-          className="absolute right-4 top-2 text-yellow-400"
-          aria-hidden="true"
-        />
+      <article className={`${estiloTarjeta} lg:col-span-7`}>
+        <h2 className={estiloTitulo}>Actividades</h2>
 
-        <div className="relative z-10 max-w-[60%]">
-          <h2 className="text-3xl font-extrabold leading-tight text-[#142D50]">
+        <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+          {actividades.map(({ nombre, icono: Icono, estilo }) => (
+            <li
+              key={nombre}
+              className="flex min-w-0 flex-col items-center gap-1.5 text-center"
+            >
+              <span className={`grid h-10 w-10 place-items-center rounded-xl ${estilo}`}>
+                <Icono size={22} aria-hidden="true" />
+              </span>
+              <span className="text-xs font-medium text-[#142D50]">{nombre}</span>
+            </li>
+          ))}
+        </ul>
+      </article>
+
+      <article className="relative flex min-h-[120px] min-w-0 items-center overflow-hidden rounded-2xl border border-amber-100 bg-[#FFF3D8] p-4 shadow-sm lg:col-span-5">
+        <div className="relative z-10 w-[68%]">
+          <h2 className="text-xl font-extrabold leading-tight text-[#142D50]">
             ¡Un verano inolvidable!
           </h2>
-
-          <p className="mt-5 text-lg leading-relaxed text-[#243B5A]">
+          <p className="mt-2 text-sm text-[#243B5A]">
             Deporte, amistad y diversión en un entorno seguro.
           </p>
         </div>
@@ -177,12 +183,11 @@ function InformacionColonia() {
         <img
           src="/images/palmera.png"
           alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-0 right-0 z-0 w-[45%] max-w-[220px] object-contain"
+          className="pointer-events-none absolute bottom-0 right-0 w-[30%] max-w-[140px] object-contain"
         />
       </article>
     </section>
-  );
+  )
 }
 
-export default InformacionColonia;
+export default InformacionColonia

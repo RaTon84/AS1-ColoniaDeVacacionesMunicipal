@@ -1,30 +1,28 @@
 function BannerBienvenida() {
   return (
     <section
-      className="relative flex h-[200px] items-center overflow-hidden bg-white bg-no-repeat lg:h-[190px]"
-      style={{
-        backgroundImage: "url('/images/banner-colonia.png')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      className="relative flex min-h-[145px] items-center bg-white bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/images/banner-colonia.png')" }}
     >
-      {/* Texto de bienvenida */}
-      <div className="relative z-10 w-[65%] px-6 py-6 lg:w-[60%] lg:px-12">
-        <h1 className="text-3xl font-extrabold leading-tight text-[#142D50] lg:text-4xl xl:text-5xl">
-          Bienvenidos a la
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white via-white/85 to-transparent sm:hidden"
+      />
 
-          <span className="mt-2 block text-[#0862AE]">
-            Colonia Municipal
-          </span>
-        </h1>
+      <div className="relative mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6">
+        <div className="max-w-[70%] sm:max-w-[52%]">
+          <h1 className="text-2xl font-extrabold leading-tight text-[#142D50] sm:text-3xl xl:text-4xl">
+            Bienvenidos a la
+            <span className="block text-[#0862AE]">Colonia Municipal</span>
+          </h1>
 
-        <p className="mt-4 text-sm text-[#243B5A] lg:text-lg">
-          Un verano para jugar, aprender y hacer amigos
-        </p>
+          <p className="mt-2 text-sm text-[#243B5A] sm:text-base">
+            Un verano para jugar, aprender y hacer amigos
+          </p>
+        </div>
       </div>
     </section>
   )
 }
 
 export default BannerBienvenida
-

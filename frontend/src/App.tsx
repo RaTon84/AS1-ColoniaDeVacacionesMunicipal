@@ -1,17 +1,9 @@
-import {
-  Routes,
-  Route,
-  Navigate,
-} from 'react-router-dom'
-
+import {Routes, Route, Navigate,} from 'react-router-dom'
 import type { ReactNode } from 'react'
-
 import keycloak from './auth/keycloak'
-
 import DashboardLayout from './layouts/DashboardLayout'
-
 import InicioPage from './pages/InicioPage'
-import NuevaInscripcionPage from './pages/tutor/NuevaInscripcionPage'
+import NuevaInscripcionPage from './pages/inscripciones/NuevaInscripcionPage'
 import MisInscripcionesPage from './pages/tutor/MisInscripcionesPage'
 import TurnosPage from './pages/tutor/TurnosPage'
 import GestionInscripcionesPage from './pages/administrativo/GestionInscripcionPage'

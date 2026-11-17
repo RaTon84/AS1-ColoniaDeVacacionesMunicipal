@@ -8,7 +8,7 @@ import {
   Clock3,
 } from "lucide-react";
 
-import type { Inscripcion } from "../data/inscripcionesEjemplo";
+import type { Inscripcion } from "../types/inscripcion";
 
 interface InscripcionesCardProps {
   inscripcion: Inscripcion;

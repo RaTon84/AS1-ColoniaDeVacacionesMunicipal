@@ -1,3 +1,4 @@
+import type { Turno } from "../types/turno";
 type EstadoServicio = 'ok' | 'error'
 
 interface EstadoSistema {
@@ -77,4 +78,78 @@ export async function guardarPeriodoInscripcion(
   }
 
   return respuesta.json()
+}
+
+interface ConfiguracionTemporada {
+  temporada: number
+  edad_minima: number
+  edad_maxima: number
+}
+
+export async function obtenerConfiguracionTemporada(
+  token: string
+): Promise<ConfiguracionTemporada> {
+  const respuesta = await fetch('/api/v1/admin/configuracion-temporada', {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  })
+
+  if (!respuesta.ok) {
+    throw new Error('No se pudo cargar la configuración de la temporada.')
+  }
+
+  return respuesta.json()
+}
+
+export async function guardarConfiguracionTemporada(
+  token: string,
+  configuracion: ConfiguracionTemporada,
+): Promise<void> {
+  const respuesta = await fetch("/api/v1/admin/configuracion-temporada", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(configuracion),
+  });
+
+  if (!respuesta.ok) {
+    const problema = await respuesta.json().catch(() => null);
+
+    throw new Error(
+      problema?.errors?.[0]?.mensaje ??
+        problema?.detail ??
+        "No se pudo guardar la configuración.",
+    );
+  }
+}
+
+export async function guardarDistribucionCupos(
+  token: string,
+  distribucion: {
+    temporada: number;
+    turnos: { turno_id: Turno["id"]; cupo_total: number }[];
+  },
+): Promise<Turno[]> {
+  const respuesta = await fetch("/api/v1/admin/distribucion-cupos", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(distribucion),
+  });
+
+  if (!respuesta.ok) {
+    const problema = await respuesta.json().catch(() => null);
+
+    throw new Error(
+      problema?.errors?.[0]?.mensaje ??
+        problema?.detail ??
+        "No se pudo guardar la distribución.",
+    );
+  }
+
+  return respuesta.json();
 }

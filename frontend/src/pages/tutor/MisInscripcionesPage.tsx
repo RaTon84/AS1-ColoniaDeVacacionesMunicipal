@@ -1,15 +1,16 @@
 import { Link } from "react-router-dom";
 import { Plus, ClipboardList, Info } from "lucide-react";
-
+import { adaptarInscripcion } from "../../utils/adaptarInscripcion";
 import InscripcionCard from "../../components/InscripcionesCard";
 import { useEffect, useState } from "react";
-import type { Inscripcion } from "../../data/inscripcionesEjemplo";
+import type { Inscripcion } from "../../types/inscripcion";
 import keycloak from "../../auth/keycloak";
 import {
   obtenerMisInscripciones,
   cancelarInscripcion,
 } from "../../services/inscripciones";
 import { obtenerTurnos } from "../../services/turnos";
+
 function MisInscripcionesPage() {
   const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -37,24 +38,9 @@ function MisInscripcionesPage() {
           obtenerTurnos(token),
         ]);
 
-        const estados = {
-          CONFIRMADA: "Confirmada",
-          LISTA_ESPERA: "Lista de espera",
-          CANCELADA: "Cancelada",
-        } as const;
-
-        const datos: Inscripcion[] = registros.map((registro) => {
-          const turno = turnos.find((t) => t.id === registro.turno_id);
-
-          return {
-            ...registro,
-            estado: estados[registro.estado],
-            turno: turno?.nombre ?? `Turno ${registro.turno_id}`,
-            sede: turno?.sede ?? "Sede no disponible",
-            fecha_inscripcion: registro.creado_en.slice(0, 10),
-            posicion_espera: registro.posicion_espera ?? undefined,
-          };
-        });
+        const datos = registros.map((registro) =>
+          adaptarInscripcion(registro, turnos),
+        );
 
         if (activo) {
           setInscripciones(datos);

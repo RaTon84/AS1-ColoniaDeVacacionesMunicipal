@@ -311,6 +311,7 @@ en Swagger UI (http://localhost:8082). Versión en la ruta (`/api/v1`) y errores
 | GET | `/api/v1/system-info` | administrador del sistema | Información técnica y estado de los servicios |
 | GET | `/api/v1/turnos` | cualquiera autenticado | Turnos de la temporada con sus cupos disponibles |
 | GET | `/api/v1/periodo-inscripcion` | los tres | Si la inscripción está abierta |
+| GET | `/api/v1/temporada` | los tres | Temporada activa y edades admitidas (las muestra el inicio) |
 | POST | `/api/v1/inscripciones` | los tres | Inscribir (201 + `Location`; 409, 422, 503) |
 | GET | `/api/v1/inscripciones/{id}` | cualquiera autenticado | Ver una inscripción (el tutor, solo las suyas: 404 si no) |
 | POST | `/api/v1/inscripciones/{id}/cancelar` | los tres (el tutor, solo las suyas) | Cancelar y promover a la primera en espera |

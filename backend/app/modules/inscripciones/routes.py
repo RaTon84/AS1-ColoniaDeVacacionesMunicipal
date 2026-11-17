@@ -47,6 +47,24 @@ def consultar_periodo_inscripcion(
     }
 
 
+@router.get("/temporada")
+def consultar_temporada(
+    db: Session = Depends(get_db),
+    _: CurrentUser = Depends(
+        require_roles("tutor", "administrativo", "administrador_sistema")
+    ),
+):
+    # Lectura para cualquier rol: la pantalla de inicio muestra las edades vigentes,
+    # que el administrador del sistema puede cambiar.
+    configuracion = obtener_configuracion_activa(db)
+
+    return {
+        "temporada": configuracion.temporada,
+        "edad_minima": configuracion.edad_minima,
+        "edad_maxima": configuracion.edad_maxima,
+    }
+
+
 @router.post("/inscripciones", response_model=InscripcionOut, status_code=201)
 def crear(
     payload: InscripcionCreate,

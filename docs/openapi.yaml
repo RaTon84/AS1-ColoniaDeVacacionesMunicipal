@@ -307,6 +307,40 @@ paths:
         '403':
           $ref: '#/components/responses/Prohibido'
 
+  /api/v1/temporada:
+    get:
+      tags: [Inscripciones]
+      summary: Consultar la temporada activa y las edades admitidas
+      description: |
+        Requiere cualquier rol. Lo usa la pantalla de inicio para mostrar las edades vigentes, que el
+        administrador del sistema cambia en /api/v1/admin/configuracion-temporada.
+      operationId: consultarTemporada
+      security:
+        - keycloak: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Temporada activa
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [temporada, edad_minima, edad_maxima]
+                properties:
+                  temporada:
+                    type: integer
+                    example: 2027
+                  edad_minima:
+                    type: integer
+                    example: 6
+                  edad_maxima:
+                    type: integer
+                    example: 12
+        '401':
+          $ref: '#/components/responses/NoAutenticado'
+        '403':
+          $ref: '#/components/responses/Prohibido'
+
   /api/v1/admin/periodo-inscripcion:
     get:
       tags: [Administración]

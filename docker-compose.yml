@@ -22,6 +22,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    restart: unless-stopped
 
   # Proveedor de identidad OIDC.
   # Importa el realm cuando todavía no existe.
@@ -31,11 +32,25 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin_demo_cambiar}
+      # Expone /health/ready en el puerto de gestión (9000, interno) para el healthcheck.
+      KC_HEALTH_ENABLED: "true"
     volumes:
       - ./keycloak/realm-colonia.json:/opt/keycloak/data/import/realm-colonia.json:ro
       - ./keycloak/themes:/opt/keycloak/themes:ro
     ports:
       - "8080:8080"
+    # La imagen no trae curl: se consulta /health/ready con bash y /dev/tcp.
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"
+      interval: 5s
+      timeout: 5s
+      start_period: 30s
+      retries: 40
+    restart: unless-stopped
 
   # Inicialización idempotente de Keycloak.
   # Sincroniza el cliente de servicio y sus permisos
@@ -51,7 +66,8 @@ services:
       - ./keycloak/init-keycloak.sh:/opt/keycloak/init/init-keycloak.sh:ro
     depends_on:
       keycloak:
-        condition: service_started
+        condition: service_healthy
+    # Tarea de una sola vez: configura Keycloak y termina («Exited (0)» es lo esperado).
     restart: "no"
 
   # Mock del padrón municipal de residentes.
@@ -62,6 +78,7 @@ services:
       - ./wiremock:/home/wiremock
     ports:
       - "8081:8080"
+    restart: unless-stopped
 
   # Backend FastAPI.
   # Aplica migraciones y datos iniciales al arrancar.
@@ -113,6 +130,7 @@ services:
       - ./docs/openapi.yaml:/openapi/openapi.yaml:ro
     ports:
       - "8082:8080"
+    restart: unless-stopped
 
   # Verificación de NFRs (docs/VERIFICACION.md). No arranca con `up`: solo con el perfil «verificacion».
   # Comparte la red de Keycloak para iniciar sesión con PKCE igual que el navegador (localhost:8080).

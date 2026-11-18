@@ -8,7 +8,7 @@ servidor real va en false). También se puede ejecutar a mano, con el sistema le
 
 Se puede correr varias veces: solo agrega las inscripciones que faltan para llegar a la meta.
 Las inscripciones se crean directo en la base (sin consultar el padrón) con creado_por = "seed-demo"
-y DNIs de chico que empiezan con 8 y tienen 10 dígitos, que no coinciden con DNIs reales.
+y DNIs de chico que empiezan con 5 y tienen 10 dígitos, que no coinciden con DNIs reales.
 """
 import argparse
 from datetime import date
@@ -54,7 +54,7 @@ def seed_demo(turno_id: int | None = None, libres: int = 2) -> None:
         nuevas, i = [], 0
         while len(nuevas) < faltan:
             i += 1
-            dni = f"8{turno.id:03d}{i:06d}"
+            dni = f"5{turno.id:03d}{i:06d}"
             if dni in usados:
                 continue
             n = len(nuevas)

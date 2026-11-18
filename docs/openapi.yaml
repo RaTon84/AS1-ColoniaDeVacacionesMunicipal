@@ -776,6 +776,7 @@ components:
           type: string
           minLength: 6
           maxLength: 20
+          description: DNI del chico utilizado para validar su residencia contra el padrón municipal.
           example: '50111222'
         nombre_chico:
           type: string
@@ -796,7 +797,7 @@ components:
           type: string
           minLength: 6
           maxLength: 20
-          description: Se valida contra el padrón de residentes.
+          description: DNI del tutor responsable de la inscripción.
           example: '30111222'
         nombre_tutor:
           type: string

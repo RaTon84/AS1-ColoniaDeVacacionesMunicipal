@@ -1,0 +1,759 @@
+[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.2MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.2MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.2MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.3MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.3MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.3MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;590.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.3MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.6MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+--;0B / 0B[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;115.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.6MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+--;0B / 0B[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;109.7MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.3MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-verificador-run-79c904db691f;18.12MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;109.7MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.3MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.22MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-verificador-run-79c904db691f;18.12MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;106MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.7MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-verificador-run-79c904db691f;18.21MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;106MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;591.7MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.8MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.23MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-verificador-run-79c904db691f;18.21MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;116.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;64.15MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-verificador-run-79c904db691f;31.41MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;116.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;193.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;64.15MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-verificador-run-79c904db691f;31.41MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;119MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.7MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.12MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;119MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.7MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.12MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.2MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.2MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.3MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.3MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.3MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261.3MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.34MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.34MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.7MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.7MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.2MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.2MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;0B / 0B[K
+postgres;26.59MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;18.47MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-frontend-app-1;18.47MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592.1MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.19MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J[Has1-coloniadevacacionesmunicipal-app-1;118.9MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-swagger-ui-1;9.41MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-keycloak-1;592MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-wiremock-1;194.5MiB / 7.743GiB[K
+as1-coloniadevacacionesmunicipal-postgres-1;47.18MiB / 7.743GiB[K
+postgres;26.46MiB / 7.743GiB[K
+pgadmin;261MiB / 7.743GiB[K
+[K
+[J

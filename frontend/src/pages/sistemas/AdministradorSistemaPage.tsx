@@ -4,13 +4,12 @@ import ConfiguracionTemporada from "./ConfiguracionTemporada";
 import EstadoSistemaSeccion from "./EstadoSistemasSeccion";
 import PerfilesPersonal from "./PerfilesPersonales";
 
-
 function AdministracionSistemaPage() {
   const mostrarEstado = Boolean(useMatch("/sistemas/estado"));
   const mostrarPerfiles = Boolean(useMatch("/sistemas/perfiles"));
   const mostrarConfiguracion = !mostrarEstado && !mostrarPerfiles;
 
-   return (
+  return (
     <main className="min-h-screen bg-transparent px-5 py-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-7">
@@ -30,12 +29,8 @@ function AdministracionSistemaPage() {
           </div>
         </header>
 
-        
-
-<ConfiguracionTemporada visible={mostrarConfiguracion} />
+        <ConfiguracionTemporada visible={mostrarConfiguracion} />
         <EstadoSistemaSeccion visible={mostrarEstado} />
-<PerfilesPersonal visible={mostrarPerfiles} />
-
         <PerfilesPersonal visible={mostrarPerfiles} />
       </div>
     </main>

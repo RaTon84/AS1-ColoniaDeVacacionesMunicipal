@@ -67,17 +67,90 @@ if [ -z "$CLIENT_UUID" ]; then
   exit 1
 fi
 
-echo "Configurando cliente..."
+# Detecta posibles duplicados de los tres mappers estándar.
+# No elimina configuraciones automáticamente.
+# Registra los UUID para facilitar el diagnóstico.
+detectar_mappers_duplicados() {
+  echo "Comprobando mappers duplicados..."
 
-"$KCADM" update "clients/$CLIENT_UUID" -r "$REALM" \
-  -s "enabled=true" \
-  -s "publicClient=false" \
-  -s "clientAuthenticatorType=client-secret" \
-  -s "serviceAccountsEnabled=true" \
-  -s "standardFlowEnabled=false" \
-  -s "implicitFlowEnabled=false" \
-  -s "directAccessGrantsEnabled=false" \
-  -s "secret=$KEYCLOAK_ADMIN_CLIENT_SECRET"
+  archivo_mappers=$(mktemp)
+
+  "$KCADM" get \
+    "clients/$CLIENT_UUID/protocol-mappers/models" \
+    -r "$REALM" \
+    --fields id,name,protocol,protocolMapper \
+    --format csv --noquotes |
+    tr -d '\r' > "$archivo_mappers"
+
+  for nombre in "Client Host" "Client ID" "Client IP Address"; do
+    encontrados=0
+
+    while IFS=',' read -r uuid mapper_name protocolo tipo; do
+      [ "$mapper_name" = "$nombre" ] || continue
+      [ "$protocolo" = "openid-connect" ] || continue
+      [ "$tipo" = "oidc-usersessionmodel-note-mapper" ] || continue
+
+      encontrados=$((encontrados + 1))
+
+      if [ "$encontrados" -gt 1 ]; then
+        echo "ADVERTENCIA: mapper duplicado detectado: $nombre ($uuid)"
+        echo "No se elimina automáticamente para evitar perder configuraciones."
+      fi
+    done < "$archivo_mappers"
+  done
+
+  rm -f "$archivo_mappers"
+
+  echo "Comprobación de mappers finalizada."
+}
+
+detectar_mappers_duplicados
+
+echo "Verificando configuración del cliente..."
+
+CONFIG_ACTUAL=$(
+  "$KCADM" get "clients/$CLIENT_UUID" \
+    -r "$REALM" \
+    --fields enabled,publicClient,serviceAccountsEnabled,standardFlowEnabled,implicitFlowEnabled,directAccessGrantsEnabled \
+    --format csv --noquotes |
+  tr -d '\r'
+)
+
+CONFIG_ESPERADA="true,false,true,false,false,false"
+
+if [ "$CONFIG_ACTUAL" = "$CONFIG_ESPERADA" ]; then
+  echo "El cliente ya tiene la configuración esperada."
+else
+  echo "Actualizando configuración del cliente..."
+
+  "$KCADM" update "clients/$CLIENT_UUID" -r "$REALM" \
+    -s "enabled=true" \
+    -s "publicClient=false" \
+    -s "clientAuthenticatorType=client-secret" \
+    -s "serviceAccountsEnabled=true" \
+    -s "standardFlowEnabled=false" \
+    -s "implicitFlowEnabled=false" \
+    -s "directAccessGrantsEnabled=false"
+fi
+
+echo "Verificando secreto del cliente..."
+
+SECRETO_ACTUAL=$(
+  "$KCADM" get "clients/$CLIENT_UUID/client-secret" \
+    -r "$REALM" \
+    --fields value \
+    --format csv --noquotes |
+  tr -d '\r'
+)
+
+if [ "$SECRETO_ACTUAL" = "$KEYCLOAK_ADMIN_CLIENT_SECRET" ]; then
+  echo "El secreto ya está configurado correctamente."
+else
+  echo "Sincronizando secreto del cliente..."
+
+  "$KCADM" update "clients/$CLIENT_UUID" -r "$REALM" \
+    -s "secret=$KEYCLOAK_ADMIN_CLIENT_SECRET"
+fi
 
 echo "Asignando permisos a la cuenta de servicio..."
 

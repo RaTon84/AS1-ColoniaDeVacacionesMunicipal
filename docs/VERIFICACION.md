@@ -1,21 +1,22 @@
+
 # Verificación de NFRs · TP 6A
 
-Qué verificamos, cómo lo hicimos y qué resultado obtuvimos, para cada NFR de
-[ARQUITECTURA.md](ARQUITECTURA.md#4-nfrs-escritos-como-escenarios). Cada NFR está escrito como escenario
-(fuente, estímulo, artefacto, entorno, respuesta y medida); acá está la prueba que lo confirma y la
-evidencia que queda en el repo.
+Qué verificamos, cómo lo hicimos y qué resultados obtuvimos para cada NFR de [ARQUITECTURA.md](ARQUITECTURA.md#4-nfrs-escritos-como-escenarios).
+
+Cada NFR está planteado como un escenario de calidad (fuente, estímulo, artefacto, entorno, respuesta y medida). Este documento registra las pruebas realizadas y las evidencias conservadas en el repositorio.
 
 ## Cómo se corre
 
-Todo corre en contenedores: no hace falta instalar nada además de Docker. Usar una base de prueba,
-porque el script deja inscripciones de prueba.
+Todo corre en contenedores. No hace falta instalar herramientas de prueba adicionales a Docker.
+
+**Importante:** utilizar una base de prueba porque el verificador crea y modifica inscripciones. `docker compose down -v` elimina los volúmenes de datos administrados por Compose.
 
 ```bash
 # 0. Sistema limpio
 docker compose down -v
-docker compose up -d --build
+docker compose up -d --build --wait
 
-# 1. Pruebas principales (seguridad, reglas, concurrencia, padrón con error, arquitectura)
+# 1. Pruebas principales
 docker compose --profile verificacion run --rm verificador
 
 # 2. Padrón detenido
@@ -27,103 +28,207 @@ docker compose start wiremock
 docker compose restart
 docker compose --profile verificacion run --rm verificador persistencia
 
-# 4. Consumo de recursos (con el sistema en uso)
+# 4. Consumo de recursos
 docker stats --no-stream
 ```
 
-El script es [verificacion/verificar.py](../verificacion/verificar.py) (solo biblioteca estándar de
-Python). Inicia sesión como la SPA, con Authorization Code + PKCE, así que no necesita permisos especiales
-en Keycloak. Cada corrida guarda su resultado en `verificacion/resultados/AAAAMMDD-HHMM-<fase>.md`.
+El script es [verificacion/verificar.py](../verificacion/verificar.py). Utiliza la biblioteca estándar de Python e inicia sesión mediante Authorization Code + PKCE.
 
-**Entorno de la medición:** completar con la máquina donde se corrió (procesador, RAM, sistema operativo,
-versión de Docker). Los tiempos medidos en una notebook no son la capacidad del servidor municipal:
-sirven para comparar entre corridas.
+Cada ejecución guarda su resultado en `verificacion/resultados/`.
+
+
+**Entorno de la medición:**
+
+- **Sistema operativo:** Microsoft Windows 10 Enterprise, versión 22H2 (compilación 19045), 64 bits.
+- **Procesador:** Intel Core i5-7400 @ 3.00 GHz (4 núcleos).
+- **Memoria RAM instalada:** 16 GB.
+- **Equipo:** PC de escritorio MSI MS-7A15.
+- **Docker:** Docker version 29.8.2.
+- **Docker Compose:** Docker Compose version v5.6.0.
+- **Terminal utilizada:** Git Bash (MINGW64).
+- **Fecha de las verificaciones:** 18/11/2026.
+
+Las mediciones de tiempo y consumo de recursos se realizaron en una computadora de desarrollo. Los resultados corresponden al entorno probado y no representan necesariamente el rendimiento del servidor municipal de producción.
+
 
 ## Resumen
 
-| NFR | Medida del escenario | Cómo se verificó | Resultado | |
+| NFR | Medida del escenario | Cómo se verificó | Resultado | Estado |
 |---|---|---|---|---|
-| NFR-01 Mantenibilidad | 0 dependencias del framework web en reglas y repositorios; cambiar edades o temporada sin tocar código | Fitness function (análisis del código) + panel del administrador del sistema | _pendiente de correr_ | ⏳ |
-| NFR-02 Costo | Todo el sistema en menos de 1,5 GB de RAM; 0 licencias pagas ni servicios en la nube | `docker stats` con el sistema en uso | _pendiente de correr_ | ⏳ |
-| NFR-03 Desplegabilidad y recuperación | 1 comando, menos de 10 min en una máquina limpia; 100 % de las inscripciones después de reiniciar | Cronómetro del `up` + fase `persistencia` | _pendiente de correr_ | ⏳ |
-| NFR-04 Integridad y equidad | 30 pedidos simultáneos por el último cupo → 1 confirmada, 0 sobreasignados, 0 duplicados | Script con pedidos en paralelo | _pendiente de correr_ | ⏳ |
-| NFR-05 Seguridad | 100 % de los accesos indebidos rechazados (401, 403 o 404) | Script con los tres usuarios y llamadas directas a la API | _pendiente de correr_ | ⏳ |
-| NFR-06 Disponibilidad | Padrón caído → 503 con `Retry-After` en menos de 3,5 s, 0 inscripciones sin validar | DNI de prueba + `docker compose stop wiremock` | _pendiente de correr_ | ⏳ |
+| NFR-01 Mantenibilidad | 0 dependencias del framework web en servicios y repositorios; modificar parámetros sin tocar código | Fitness function + prueba manual del panel administrativo | 0 violaciones en 4 archivos; configuración de edades, cupos y período comprobada manualmente | OK en alcance probado |
+| NFR-02 Costo | Sistema con menos de 1,5 GB de RAM; sin licencias pagas ni servicios cloud requeridos | `docker stats` durante el uso y revisión de componentes | Máximo observado: 975,56 MiB en los 5 servicios principales | Parcial |
+| NFR-03 Desplegabilidad y recuperación | Despliegue con un comando en menos de 10 minutos; persistencia después de reiniciar | Despliegue con volúmenes nuevos, cronómetro y fase `persistencia` | 65,627 s; 4 turnos y 148 inscripciones iniciales; 20/20 estados conservados | OK en entorno probado |
+| NFR-04 Integridad y equidad | 30 pedidos simultáneos por el último cupo: 1 confirmada, 0 sobrecupos, 0 duplicados | Script con pedidos concurrentes | 1 confirmada, 29 en espera, 0 sobrecupos; duplicados rechazados | OK |
+| NFR-05 Seguridad | Accesos indebidos rechazados con 401, 403 o 404 | Script con tres usuarios y llamadas directas a la API | PKCE, roles, respuestas 401/403/404 y gestión de cuentas verificados | OK |
+| NFR-06 Disponibilidad | Padrón caído: 503 con `Retry-After` en menos de 3,5 s, sin crear inscripciones no validadas | DNI de prueba + detención de WireMock | 503, `Retry-After: 30`, 3007 ms; health degradado y turnos operativos | OK |
 
 ## Detalle por NFR
 
 ### NFR-01 · Mantenibilidad (NFR estrella)
 
-- **Qué se verificó:** que la regla de dependencias de la Clean Architecture liviana (ADR-002) se cumple
-  en el código, y que preparar la temporada siguiente no requiere tocar código.
-- **Cómo:** fitness function automática en `verificar.py`: analiza con `ast` cada `service.py` y
-  `repository.py` de `backend/app/modules` y falla si alguno importa `fastapi` o `starlette`. Manual:
-  desde el panel del administrador del sistema se cambia la temporada, las edades y el período.
-- **Resultado:** _pendiente de correr._
-- **Si no alcanza con esto:** la táctica que lo sostiene es la separación en módulos con dependencias en
-  un solo sentido; la fitness function evita la erosión (que la regla quede en el documento y se rompa en
-  el código).
+- **Qué se verificó:** que la regla de dependencias de la Clean Architecture liviana (ADR-002) se cumpla en el código y que los parámetros de negocio puedan modificarse sin editar el código fuente.
+
+- **Cómo:** la fitness function de `verificar.py` analiza mediante `ast` los archivos `service.py` y `repository.py` de los módulos del backend y detecta importaciones indebidas de `fastapi` o `starlette`.
+
+  Además, se realizó una verificación manual desde el panel del administrador del sistema, modificando parámetros de la colonia y observando su representación en la interfaz de consulta.
+
+- **Resultado automático:** 4 archivos analizados, 0 violaciones detectadas.
+
+- **Resultado manual:** se comprobó la configuración de edades, distribución de cupos y período de inscripción mediante la interfaz administrativa.
+
+- **Evidencias:**
+  - `verificacion/resultados/20261118-2252-principal.md`
+  - `verificacion/resultados/nfr01-antes.png` 
+  - `verificacion/resultados/nfr01-despues.png`
+
+- **Conclusión:** se verificó la separación del framework en los archivos analizados y la configuración de parámetros mediante la interfaz, sin necesidad de modificar código.
+
+- **Alcance:** la fitness function comprueba una regla arquitectónica específica; no constituye un análisis exhaustivo de todas las dependencias del proyecto.
 
 ### NFR-02 · Costo
 
-- **Qué se verificó:** que el sistema entra en el servidor municipal compartido sin infraestructura nueva.
-- **Cómo:** `docker stats --no-stream` después de correr la verificación principal. Se suma la columna
-  `MEM USAGE` de los cinco contenedores.
-- **Resultado:** _pendiente de correr._ Todas las piezas son de código abierto y autoalojadas (sin
-  licencias ni servicios en la nube).
+- **Qué se verificó:** que el sistema pueda funcionar dentro del límite de memoria establecido para el servidor municipal compartido.
+
+- **Cómo:** se utilizó `docker stats` con el sistema en uso y se registraron muestras del consumo de memoria de los cinco servicios principales.
+
+- **Resultado:**
+  - Máximo simultáneo observado: **975,56 MiB**.
+  - Límite establecido: **1536 MiB**.
+  - El consumo observado se mantuvo por debajo del límite.
+
+- **Evidencia:** `verificacion/resultados/consumo-ram.txt`.
+
+- **Conclusión:** se cumple el criterio de consumo de memoria en el entorno y período medidos.
+
+- **Alcance:** no se incluyó el contenedor opcional del verificador ni se realizó una prueba de carga sostenida de producción. La arquitectura utiliza componentes autoalojados y de código abierto, pero no se efectuó una auditoría independiente de licencias y costos operativos.
 
 ### NFR-03 · Desplegabilidad y recuperación operativa
 
-- **Qué se verificó:** que alguien que no instaló el sistema lo pone en marcha con un comando, y que los
-  datos sobreviven a un reinicio.
-- **Cómo:** en una máquina con Docker y sin imágenes descargadas, cronometrar `docker compose up -d --build`
-  hasta que `http://localhost:8000/api/v1/health` responde 200 (en PowerShell:
-  `Measure-Command { docker compose up -d --build }`). Después, la fase `persistencia` del script compara
-  las inscripciones antes y después de `docker compose restart`.
-- **Resultado:** _pendiente de correr._
+- **Qué se verificó:** que el sistema pueda desplegarse de manera reproducible mediante Docker Compose y que los datos persistan después de reiniciar los contenedores.
+
+- **Cómo:**
+  1. Se eliminaron los contenedores y volúmenes mediante `docker compose down -v`.
+  2. Se ejecutó `docker compose up -d --build --wait`, registrando la salida y el tiempo de ejecución.
+  3. Se comprobó que los servicios estuvieran saludables.
+  4. Se verificó la inicialización automática de los datos en PostgreSQL.
+  5. Se ejecutó el verificador principal sobre la instalación nueva.
+  6. En una ejecución anterior, se reiniciaron los contenedores y se ejecutó la fase `persistencia`.
+
+- **Resultados:**
+  - Tiempo de despliegue: **1 minuto y 5,627 segundos**.
+  - Límite de aceptación: **10 minutos**.
+  - Cinco servicios principales saludables.
+  - Inicialización automática: **4 turnos y 148 inscripciones**.
+  - Verificador principal después del despliegue limpio: **23/23 pruebas OK**.
+  - Persistencia: **1/1 prueba OK**.
+  - Se encontraron 251 inscripciones y se comprobaron **20/20 estados conservados** después del reinicio.
+
+- **Evidencias:**
+  - `verificacion/resultados/despliegue-limpio.txt`
+  - `verificacion/resultados/semillas-despliegue.txt`
+  - `verificacion/resultados/20261118-2218-persistencia.md`
+  - `verificacion/resultados/20261118-2252-principal.md`
+
+- **Conclusión:** el sistema pudo reconstruirse desde contenedores y volúmenes nuevos, inicializar sus datos y superar las pruebas automatizadas dentro del tiempo establecido.
+
+- **Alcance:** Docker y las imágenes ya estaban disponibles en la computadora. No se midió la instalación inicial de Docker ni la descarga completa de imágenes sin caché. La prueba de persistencia comparó una muestra de 20 estados, no cada una de las 251 inscripciones.
 
 ### NFR-04 · Integridad y consistencia de datos (equidad en el último cupo)
 
-- **Qué se verificó:** que nunca se asignan más cupos de los que hay, que un chico no queda inscripto dos
-  veces y que el orden de llegada se respeta también en la lista de espera.
-- **Cómo:** `verificar.py`
-  1. deja un turno con un solo cupo libre (con la distribución de cupos del administrador del sistema);
-  2. lanza 30 pedidos que arrancan juntos, mitad como tutor y mitad como administrativo;
-  3. comprueba 1 confirmada, 29 en lista de espera con posiciones consecutivas y 0 cupos libres;
-  4. lanza 10 pedidos simultáneos del mismo chico: 1 × 201 y 9 × 409;
-  5. cancela la confirmada y comprueba que la primera de la lista pasa a confirmada;
-  6. reinscribe al chico cancelado (201) y restaura la distribución original.
-  También comprueba 201 con `Location`, 409 duplicado, 422 no residente, 422 edad fuera de rango y 422 datos
-  inválidos.
-- **Resultado:** _pendiente de correr._
+- **Qué se verificó:** que nunca se asignen más cupos que los disponibles, que un chico no quede inscripto dos veces en la temporada y que se respete el orden de la lista de espera.
+
+- **Cómo:** `verificar.py`:
+  1. Prepara un turno con un solo cupo libre.
+  2. Ejecuta 30 solicitudes concurrentes.
+  3. Comprueba una inscripción confirmada y 29 en espera.
+  4. Verifica posiciones consecutivas en la lista de espera.
+  5. Ejecuta 10 solicitudes simultáneas del mismo chico.
+  6. Cancela la inscripción confirmada y comprueba la promoción de la primera persona en espera.
+  7. Comprueba la reinscripción del chico cancelado y restaura la distribución de cupos.
+
+  También comprueba las respuestas ante inscripciones válidas, duplicados, residencia, edad y datos inválidos.
+
+- **Resultados:**
+  - 30 solicitudes concurrentes: **1 confirmada y 29 en espera**.
+  - **0 sobrecupos**.
+  - Latencia p95: **1200 ms**; máxima: **1233 ms**.
+  - 10 solicitudes del mismo chico: **1 respuesta 201 y 9 respuestas 409**.
+  - Cancelación y promoción de la primera inscripción en espera: correctas.
+  - Rechazo de no residentes, edades fuera de rango y datos inválidos: correcto.
+
+- **Evidencia:** `verificacion/resultados/20261118-2252-principal.md`.
+
+- **Conclusión:** se mantuvo la integridad de los cupos y el orden de la lista de espera en los escenarios concurrentes probados.
 
 ### NFR-05 · Seguridad
 
-- **Qué se verificó:** que la API controla el acceso por sí misma, aunque alguien la llame sin pasar por
-  la SPA.
-- **Cómo:** `verificar.py` inicia sesión con PKCE con `tutor1`, `admin1` y `sysadmin1`, y prueba: sin token
-  → 401 con `WWW-Authenticate: Bearer` y `application/problem+json`; token con la firma alterada → 401;
-  tutor en el listado administrativo → 403; administrativo en la configuración de temporada → 403; tutor
-  que pide una inscripción cargada por otra persona → 404. Gestión de cuentas: el administrativo recibe 403
-  en `/admin/usuarios`; el administrador del sistema registra un administrativo (201 con `Location`), lo da
-  de baja (habilitado = false) y recibe 409 si intenta quitarse su propio rol. Las reglas de la gestión de
-  cuentas tienen además tests con Keycloak simulado: `docker compose exec app pytest tests/test_usuarios.py`.
-- **Resultado:** _pendiente de correr._
+- **Qué se verificó:** que la API controle la autenticación y autorización independientemente de las restricciones visuales de la SPA.
+
+- **Cómo:** `verificar.py` inicia sesión mediante Authorization Code + PKCE (S256) con los usuarios `tutor1`, `admin1` y `sysadmin1`, y realiza llamadas directas a la API.
+
+- **Resultados:**
+  - Inicio de sesión mediante PKCE: **3 tokens obtenidos**.
+  - Solicitud sin token: **401**.
+  - Token con firma alterada: **401**.
+  - Tutor accediendo al listado administrativo: **403**.
+  - Administrativo accediendo a configuración de temporada: **403**.
+  - Administrativo accediendo a gestión de cuentas: **403**.
+  - Tutor consultando una inscripción ajena: **404**.
+  - Administrador del sistema creando y deshabilitando una cuenta administrativa: correcto.
+  - Intento de quitarse su propio rol de administrador del sistema: **409**.
+
+- **Evidencia:** `verificacion/resultados/20261118-2252-principal.md`.
+
+- **Conclusión:** se comprobaron controles de autenticación, autorización por roles y protección de recursos ajenos en los escenarios probados.
+
+- **Alcance:** no se realizó una auditoría de penetración exhaustiva.
 
 ### NFR-06 · Disponibilidad
 
-- **Qué se verificó:** qué pasa cuando falla el sistema externo del que dependemos (el padrón).
-- **Cómo:** con el DNI de prueba `50000000` el mock responde con error; además se detiene el contenedor
-  con `docker compose stop wiremock` (ingeniería del caos en pequeño, Clase 13: hipótesis, inyectar la
-  falla, observar y restaurar).
-- **Hipótesis:** la inscripción responde 503 con `Retry-After` sin crear nada, el health avisa qué
-  componente falla y el resto del sistema sigue atendiendo.
-- **Resultado:** _pendiente de correr._
+- **Qué se verificó:** que la caída del padrón externo no permita crear inscripciones sin validar y que las funcionalidades independientes continúen operativas.
+
+- **Cómo:**
+  1. Se utilizó el DNI de prueba `50000000` para simular un error del padrón.
+  2. Se detuvo WireMock mediante `docker compose stop wiremock`.
+  3. Se ejecutó `docker compose --profile verificacion run --rm verificador padron-apagado`.
+  4. Se restauró WireMock.
+
+- **Hipótesis:** la inscripción debe responder 503 con `Retry-After`, no crear una inscripción no validada, informar el problema en `/health` y permitir que el resto del sistema siga atendiendo.
+
+- **Resultados:**
+  - Error simulado: **503**, `Retry-After: 30`, sin inscripción creada, **78 ms**.
+  - WireMock detenido: **503**, `Retry-After: 30`, **3007 ms**.
+  - `/health`: **503**, `status: degraded`, `padron: error`.
+  - Consulta de turnos: **200**.
+  - Fase `padron-apagado`: **3/3 pruebas OK**.
+
+  En una primera ejecución se obtuvo 1/3 pruebas correctas. Se comprobó posteriormente que WireMock estaba activo y se repitió la prueba con el contenedor efectivamente detenido, obteniendo 3/3 pruebas correctas.
+
+- **Evidencias:**
+  - `verificacion/resultados/20261118-2215-padron-apagado.md`
+  - `verificacion/resultados/20261118-2252-principal.md`
+
+- **Conclusión:** el sistema gestionó la indisponibilidad del padrón, rechazó la inscripción no validada y mantuvo operativa la consulta de turnos.
+
+## Evidencias consolidadas
+
+Todos los archivos se encuentran en `verificacion/resultados/`.
+
+| Archivo | Verificación |
+|---|---|
+| `consumo-ram.txt` | NFR-02: consumo de memoria |
+| `despliegue-limpio.txt` | NFR-03: despliegue cronometrado |
+| `semillas-despliegue.txt` | NFR-03: inicialización automática |
+| `20261118-2218-persistencia.md` | NFR-03: persistencia |
+| `20261118-2252-principal.md` | NFR-01, NFR-04, NFR-05 y NFR-06 |
+| `20261118-2215-padron-apagado.md` | NFR-06: caída real del padrón |
+| `nfr01-antes.png` | NFR-01: configuración original (pendiente) |
+| `nfr01-despues.png` | NFR-01: configuración modificada (pendiente) |
 
 ## Lo que no verificamos y por qué
 
-- **Carga masiva:** el escenario son 1.500 familias en 3 semanas, no un pico de miles por segundo. Lo que
-  importa es la equidad en el último cupo (NFR-04), que sí se prueba con pedidos simultáneos. Si el pico
-  creciera, la táctica sería una cola delante de la inscripción (ver la evaluación en ARQUITECTURA.md).
-- **HTTPS y MFA:** fuera del alcance del TP (ADR-006); en producción, TLS lo pone el proxy del municipio
-  y MFA se activa en Keycloak sin tocar la aplicación.
+- **Carga masiva sostenida:** el escenario contempla 1.500 familias en tres semanas, no miles de solicitudes por segundo. Se priorizó la integridad en el último cupo. Si el volumen aumentara, correspondería evaluar una cola de solicitudes y nuevas pruebas de carga.
+- **HTTPS y MFA:** fuera del alcance del TP (ADR-006). En producción, TLS debería proporcionarlo el proxy municipal y MFA podría habilitarse en Keycloak.
+- **Máquina sin Docker ni imágenes descargadas:** se verificó un despliegue limpio de la aplicación con contenedores y volúmenes nuevos, pero no la preparación completa de una computadora.
+- **Auditoría económica completa:** se verificó el consumo de memoria, pero no se realizó una auditoría independiente de licencias y costos.
+- **Persistencia individual de todas las inscripciones:** la prueba automatizada comparó los estados de 20 inscripciones después del reinicio.

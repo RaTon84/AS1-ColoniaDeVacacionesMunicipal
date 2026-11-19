@@ -1,0 +1,5 @@
+ turnos | inscripciones 
+--------+---------------
+      4 |           148
+(1 row)
+
